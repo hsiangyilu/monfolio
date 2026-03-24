@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Holding {
+  id           String   @id @default(cuid())
+  category     String
+  symbol       String
+  name         String
+  quantity     Float
+  costBasis    Float?
+  costCurrency String   @default("TWD")
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([category, symbol])
+}
+
+model Debt {
+  id               String    @id @default(cuid())
+  name             String
+  principalTotal   Float
+  remainingBalance Float
+  interestRate     Float
+  remainingTerms   Int
+  monthlyPayment   Float
+  startDate        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model PortfolioSnapshot {
+  id            String   @id @default(cuid())
+  totalNetWorth Float
+  twStockValue  Float
+  usStockValue  Float
+  cryptoValue   Float
+  cashValue     Float
+  debtValue     Float
+  fxRateUsdTwd  Float
+  snapshotData  String
+  createdAt     DateTime @default(now())
+}
+
+model TargetAllocation {
+  id        String @id @default(cuid())
+  category  String @unique
+  targetPct Float
+}
+
+model OcrUpload {
+  id         String   @id @default(cuid())
+  category   String
+  imageName  String
+  rawOcrText String
+  parsedData String
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+}
+
+model Settings {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
