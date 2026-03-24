@@ -123,7 +123,7 @@ export default function ClientHomePage() {
     "/api/prices/crypto",
     fetcher
   );
-  const { data: fxRate } = useSWR<FxRateData>("/api/prices/fx-rate", fetcher);
+  const { data: fxRate } = useSWR<FxRateData>("/api/prices/fx", fetcher);
   const { data: snapshots } = useSWR<PortfolioSnapshot[]>(
     "/api/snapshots",
     fetcher

@@ -51,7 +51,7 @@ export default function CategoryDetailPage({
     category === "crypto" ? "/api/prices/crypto" : null,
     fetcher
   );
-  const { data: fxRate } = useSWR<FxRateData>("/api/prices/fx-rate", fetcher);
+  const { data: fxRate } = useSWR<FxRateData>("/api/prices/fx", fetcher);
 
   const [ocrResults, setOcrResults] = useState<ParsedHolding[]>([]);
   const [ocrPreviewOpen, setOcrPreviewOpen] = useState(false);

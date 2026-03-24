@@ -32,7 +32,7 @@ export default function CashPage() {
     "/api/holdings",
     fetcher
   );
-  const { data: fxRate } = useSWR<FxRateData>("/api/prices/fx-rate", fetcher);
+  const { data: fxRate } = useSWR<FxRateData>("/api/prices/fx", fetcher);
 
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
