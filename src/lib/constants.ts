@@ -46,7 +46,7 @@ export const mobileNavItems: NavItem[] = [
   { slug: "overview", label: "Overview", href: "/", icon: Home, color: "#00d4ff" },
   { slug: "tw-stocks", label: "台股", href: "/tw-stocks", icon: TrendingUp, color: "#00d4ff" },
   { slug: "us-stocks", label: "美股", href: "/us-stocks", icon: Globe, color: "#7c3aed" },
-  { slug: "crypto", label: "幣", href: "/crypto", icon: Bitcoin, color: "#f59e0b" },
+  { slug: "crypto", label: "虛擬貨幣", href: "/crypto", icon: Bitcoin, color: "#f59e0b" },
   { slug: "debt", label: "負債", href: "/debt", icon: CreditCard, color: "#ef4444" },
 ];
 
