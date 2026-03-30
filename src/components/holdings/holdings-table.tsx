@@ -130,8 +130,9 @@ export default function HoldingsTable({
   const FormFields = (
     <div className="space-y-3">
       <div>
-        <label className="text-xs text-gray-500">代碼</label>
+        <label htmlFor="holding-symbol" className="text-xs text-gray-500">代碼</label>
         <Input
+          id="holding-symbol"
           value={form.symbol}
           onChange={(e) => setForm({ ...form, symbol: e.target.value })}
           placeholder="e.g. 2330, AAPL, BTC"
@@ -139,8 +140,9 @@ export default function HoldingsTable({
         />
       </div>
       <div>
-        <label className="text-xs text-gray-500">名稱</label>
+        <label htmlFor="holding-name" className="text-xs text-gray-500">名稱</label>
         <Input
+          id="holding-name"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           placeholder="台積電"
@@ -148,8 +150,9 @@ export default function HoldingsTable({
         />
       </div>
       <div>
-        <label className="text-xs text-gray-500">持股數量</label>
+        <label htmlFor="holding-quantity" className="text-xs text-gray-500">持股數量</label>
         <Input
+          id="holding-quantity"
           type="number"
           value={form.quantity}
           onChange={(e) => setForm({ ...form, quantity: e.target.value })}
@@ -158,8 +161,11 @@ export default function HoldingsTable({
         />
       </div>
       <div>
-        <label className="text-xs text-gray-500">成本 (TWD)</label>
+        <label htmlFor="holding-cost" className="text-xs text-gray-500">
+          成本 ({category === "us_stock" || category === "crypto" ? "USD" : "TWD"})
+        </label>
         <Input
+          id="holding-cost"
           type="number"
           value={form.costBasis}
           onChange={(e) => setForm({ ...form, costBasis: e.target.value })}
@@ -230,15 +236,20 @@ export default function HoldingsTable({
       </Dialog>
 
       <div className="card-premium rounded-2xl overflow-hidden">
-        <Table>
+        <div className="overflow-x-auto -mx-0">
+        <Table className="min-w-[640px]">
           <TableHeader>
             <TableRow className="border-gray-100 hover:bg-transparent">
               <TableHead className="text-gray-500">名稱</TableHead>
               <TableHead className="text-gray-500">代碼</TableHead>
               <TableHead className="text-gray-500 text-right">持股數量</TableHead>
-              <TableHead className="text-gray-500 text-right">成本均價</TableHead>
-              <TableHead className="text-gray-500 text-right">即時價格</TableHead>
-              <TableHead className="text-gray-500 text-right">市值(TWD)</TableHead>
+              <TableHead className="text-gray-500 text-right">
+                成本均價{category === "us_stock" || category === "crypto" ? <span className="text-gray-400 text-[10px] ml-1">(USD)</span> : null}
+              </TableHead>
+              <TableHead className="text-gray-500 text-right">
+                即時價格{category === "us_stock" || category === "crypto" ? <span className="text-gray-400 text-[10px] ml-1">(USD)</span> : null}
+              </TableHead>
+              <TableHead className="text-gray-500 text-right">市值<span className="text-gray-400 text-[10px] ml-1">(TWD)</span></TableHead>
               <TableHead className="text-gray-500 text-right">未實現損益</TableHead>
               <TableHead className="text-gray-500 text-right">損益%</TableHead>
               <TableHead className="text-gray-500 text-right">操作</TableHead>
@@ -292,18 +303,20 @@ export default function HoldingsTable({
                       {formatPercent(h.pnlPercent)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-0.5">
                         <Button
                           variant="ghost"
-                          size="icon-xs"
+                          size="icon-sm"
                           onClick={() => openEdit(h)}
+                          aria-label={`編輯 ${h.name}`}
                         >
                           <Pencil className="w-3.5 h-3.5 text-gray-400" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon-xs"
+                          size="icon-sm"
                           onClick={() => openDelete(h.id)}
+                          aria-label={`刪除 ${h.name}`}
                         >
                           <Trash2 className="w-3.5 h-3.5 text-gray-400" />
                         </Button>
@@ -315,6 +328,7 @@ export default function HoldingsTable({
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   );

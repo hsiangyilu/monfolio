@@ -97,8 +97,10 @@ export default function SettingsPage() {
       if (!res.ok) throw new Error("Failed");
       mutateTargets();
       setTargetMsg("目標配置已儲存");
+      setTimeout(() => setTargetMsg(null), 3000);
     } catch {
       setTargetMsg("儲存失敗");
+      setTimeout(() => setTargetMsg(null), 4000);
     } finally {
       setSavingTargets(false);
     }
@@ -116,8 +118,10 @@ export default function SettingsPage() {
       if (!res.ok) throw new Error("Failed");
       mutateSettings();
       setSettingsMsg("OCR 設定已儲存");
+      setTimeout(() => setSettingsMsg(null), 3000);
     } catch {
       setSettingsMsg("儲存失敗");
+      setTimeout(() => setSettingsMsg(null), 4000);
     } finally {
       setSavingSettings(false);
     }

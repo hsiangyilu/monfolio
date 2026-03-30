@@ -92,7 +92,7 @@ export default function CategoryDetailPage({
       const price = getPrice(h.symbol);
       const fxMultiplier = needsFx ? usdTwd : 1;
       const totalValueTwd = price != null ? h.quantity * price * fxMultiplier : 0;
-      const cost = h.costBasis ?? 0;
+      const cost = (h.costBasis ?? 0) * fxMultiplier; // convert to TWD same as totalValueTwd
       const unrealizedPnl = totalValueTwd - cost;
       const pnlPercent = cost > 0 ? (unrealizedPnl / cost) * 100 : 0;
 
@@ -143,7 +143,7 @@ export default function CategoryDetailPage({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...data, category }),
     });
-    mutateHoldings();
+    await mutateHoldings(undefined, { revalidate: true });
   };
 
   const handleEdit = async (
@@ -160,12 +160,12 @@ export default function CategoryDetailPage({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    mutateHoldings();
+    await mutateHoldings(undefined, { revalidate: true });
   };
 
   const handleDelete = async (id: string) => {
     await fetch(`/api/holdings/${id}`, { method: "DELETE" });
-    mutateHoldings();
+    await mutateHoldings(undefined, { revalidate: true });
   };
 
   const isLoading = !holdings;

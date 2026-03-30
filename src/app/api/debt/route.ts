@@ -27,6 +27,7 @@ export async function PUT(request: NextRequest) {
       interestRate,
       remainingTerms,
       monthlyPayment,
+      paymentDay,
       startDate,
     } = body;
 
@@ -50,6 +51,7 @@ export async function PUT(request: NextRequest) {
           interestRate: interestRate ?? 0,
           remainingTerms: remainingTerms ?? 0,
           monthlyPayment: monthlyPayment ?? 0,
+          paymentDay: paymentDay ?? null,
           startDate: startDate ? new Date(startDate) : null,
         },
       });
@@ -71,6 +73,7 @@ export async function PUT(request: NextRequest) {
         ...(interestRate !== undefined && { interestRate }),
         ...(remainingTerms !== undefined && { remainingTerms }),
         ...(monthlyPayment !== undefined && { monthlyPayment }),
+        ...(paymentDay !== undefined && { paymentDay: paymentDay ?? null }),
         ...(startDate !== undefined && {
           startDate: startDate ? new Date(startDate) : null,
         }),

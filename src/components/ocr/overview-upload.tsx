@@ -394,7 +394,7 @@ export default function OverviewUpload({
                         <TableCell>
                           <Select
                             value={row.category}
-                            onValueChange={(v) => updateRow(i, "category", v)}
+                            onValueChange={(v) => v && updateRow(i, "category", v)}
                           >
                             <SelectTrigger className="h-7 w-[80px] text-xs">
                               <SelectValue />

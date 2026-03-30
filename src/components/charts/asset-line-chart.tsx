@@ -54,7 +54,7 @@ export default function AssetLineChart({
           尚無資料
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={240}>
+        <ResponsiveContainer width="100%" height={200} className="md:!h-[240px]">
           <LineChart
             data={data}
             margin={{ top: 8, right: 8, left: 0, bottom: 0 }}

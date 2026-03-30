@@ -75,6 +75,7 @@ export interface Debt {
   interestRate: number;
   remainingTerms: number;
   monthlyPayment: number;
+  paymentDay: number | null;
   startDate: string | null;
   createdAt: string;
   updatedAt: string;

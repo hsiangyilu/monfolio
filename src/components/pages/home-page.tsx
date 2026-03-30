@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import useSWR from "swr";
 import {
@@ -39,6 +39,7 @@ import type {
   FxRateData,
   PortfolioSnapshot,
   TargetAllocation,
+  Debt,
 } from "@/types/index";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -124,7 +125,8 @@ export default function ClientHomePage() {
     fetcher
   );
   const { data: fxRate } = useSWR<FxRateData>("/api/prices/fx", fetcher);
-  const { data: snapshots } = useSWR<PortfolioSnapshot[]>(
+  const { data: debts } = useSWR<Debt[]>("/api/debt", fetcher);
+  const { data: snapshots, mutate: mutateSnapshots } = useSWR<PortfolioSnapshot[]>(
     "/api/snapshots",
     fetcher
   );
@@ -167,14 +169,20 @@ export default function ClientHomePage() {
       }
     });
 
-    return { tw_stock, us_stock, crypto, cash, debt: 0 };
-  }, [holdings, twPrices, usPrices, cryptoPrices, usdTwd]);
+    let debt = 0;
+    Array.isArray(debts) && debts.forEach((d) => {
+      debt += d.remainingBalance;
+    });
+
+    return { tw_stock, us_stock, crypto, cash, debt };
+  }, [holdings, twPrices, usPrices, cryptoPrices, usdTwd, debts]);
 
   const totalNetWorth =
     categoryValues.tw_stock +
     categoryValues.us_stock +
     categoryValues.crypto +
-    categoryValues.cash;
+    categoryValues.cash -
+    categoryValues.debt;
 
   const totalUnrealizedPnl = useMemo(() => {
     if (!holdings) return 0;
@@ -252,6 +260,39 @@ export default function ClientHomePage() {
       ? (todayChange / (totalNetWorth - todayChange)) * 100
       : 0;
 
+  // Auto-save a daily snapshot once all prices are loaded and net worth is ready
+  const snapshotSavedRef = useRef(false);
+  useEffect(() => {
+    if (snapshotSavedRef.current) return;
+    if (!holdings || !twPrices || !usPrices || !cryptoPrices || !fxRate || !snapshots) return;
+    if (totalNetWorth <= 0) return;
+
+    const todayKey = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+    const alreadySavedToday = snapshots.some(
+      (s) => new Date(s.createdAt).toISOString().slice(0, 10) === todayKey
+    );
+    if (alreadySavedToday) {
+      snapshotSavedRef.current = true;
+      return;
+    }
+
+    snapshotSavedRef.current = true;
+    fetch("/api/snapshots", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        totalNetWorth,
+        twStockValue: categoryValues.tw_stock,
+        usStockValue: categoryValues.us_stock,
+        cryptoValue: categoryValues.crypto,
+        cashValue: categoryValues.cash,
+        debtValue: categoryValues.debt,
+        fxRateUsdTwd: fxRate.usdTwd,
+        snapshotData: {},
+      }),
+    }).then(() => mutateSnapshots());
+  }, [holdings, twPrices, usPrices, cryptoPrices, fxRate, snapshots, totalNetWorth, categoryValues, mutateSnapshots]);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -289,7 +330,7 @@ export default function ClientHomePage() {
               </p>
               <button
                 onClick={toggleMask}
-                className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                className="p-2 -m-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                 aria-label={masked ? "顯示金額" : "隱藏金額"}
               >
                 {masked ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -394,7 +435,9 @@ export default function ClientHomePage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-gray-900 tabular-nums">
-                      {cat.key === "debt" ? "—" : masked ? "NT$ ••••" : formatTWD(value)}
+                      {cat.key === "debt"
+                        ? (value === 0 ? "—" : masked ? "NT$ ••••" : formatTWD(value))
+                        : masked ? "NT$ ••••" : formatTWD(value)}
                     </span>
                     <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" />
                   </div>
@@ -414,8 +457,12 @@ export default function ClientHomePage() {
             );
           })}
 
+        </div>
+
+        {/* Right column: Allocation + Net Worth Chart */}
+        <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col gap-5 h-full">
           {/* Mini allocation donut */}
-          <div className="card-premium rounded-lg p-4 mt-2">
+          <div className="card-premium rounded-lg p-4">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">
               配比
             </h3>
@@ -476,11 +523,9 @@ export default function ClientHomePage() {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Right column: Net Worth Chart */}
-        <div className="col-span-12 lg:col-span-8 xl:col-span-9">
-          <div className="card-premium rounded-xl p-6 h-full">
+          {/* Net Worth Chart */}
+          <div className="card-premium rounded-xl p-6 flex flex-col flex-1">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-sm font-semibold text-gray-900">
                 總資產走勢
@@ -505,8 +550,9 @@ export default function ClientHomePage() {
               </div>
             </div>
 
+            <div className="flex-1 min-h-[240px]">
             {chartData.length === 0 ? (
-              <div className="flex flex-col h-[380px] items-center justify-center text-gray-400">
+              <div className="flex flex-col h-full min-h-[240px] items-center justify-center text-gray-400">
                 <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
                   <TrendingUp className="w-7 h-7 text-gray-300" />
                 </div>
@@ -516,7 +562,7 @@ export default function ClientHomePage() {
                 </p>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={380}>
+              <ResponsiveContainer width="100%" height="100%" minHeight={240}>
                 <AreaChart
                   data={chartData}
                   margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
@@ -579,6 +625,7 @@ export default function ClientHomePage() {
                 </AreaChart>
               </ResponsiveContainer>
             )}
+            </div>
           </div>
         </div>
       </div>

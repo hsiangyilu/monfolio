@@ -46,7 +46,7 @@ export default function NetWorthChart({ data }: NetWorthChartProps) {
           尚無資料，請新增交易紀錄
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={240} className="md:!h-[300px]">
           <AreaChart
             data={data}
             margin={{ top: 8, right: 8, left: 0, bottom: 0 }}

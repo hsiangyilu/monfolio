@@ -2,21 +2,35 @@
 
 import { useMemo } from "react";
 import { formatTWD } from "@/lib/format";
+import { Zap, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface DebtProgressProps {
+  name: string;
   principalTotal: number;
   remainingBalance: number;
   interestRate: number;
   remainingTerms: number;
   monthlyPayment: number;
+  paymentDay: number | null;
+  nextPaymentDate: Date | null;
+  isAutoCalc: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export default function DebtProgress({
+  name,
   principalTotal,
   remainingBalance,
   interestRate,
   remainingTerms,
   monthlyPayment,
+  paymentDay,
+  nextPaymentDate,
+  isAutoCalc,
+  onEdit,
+  onDelete,
 }: DebtProgressProps) {
   const paidAmount = principalTotal - remainingBalance;
   const progressPct =
@@ -31,9 +45,48 @@ export default function DebtProgress({
     });
   }, [remainingTerms]);
 
+  const nextPaymentStr = useMemo(() => {
+    if (!nextPaymentDate) return null;
+    return nextPaymentDate.toLocaleDateString("zh-TW", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }, [nextPaymentDate]);
+
   return (
     <div className="card-premium rounded-xl p-6">
-      <h3 className="mb-5 text-sm font-semibold text-gray-900">還款進度</h3>
+      <div className="flex items-center gap-2 mb-5">
+        <h3 className="text-sm font-semibold text-gray-900">{name}</h3>
+        {isAutoCalc && (
+          <span className="inline-flex items-center gap-1 rounded-md bg-[#e8b462]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#c49440]">
+            <Zap className="w-2.5 h-2.5" />
+            自動計算
+          </span>
+        )}
+        <div className="ml-auto flex items-center gap-0.5">
+          {onEdit && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onEdit}
+              aria-label={`編輯 ${name}`}
+            >
+              <Pencil className="w-3.5 h-3.5 text-gray-400" />
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onDelete}
+              aria-label={`刪除 ${name}`}
+            >
+              <Trash2 className="w-3.5 h-3.5 text-gray-400" />
+            </Button>
+          )}
+        </div>
+      </div>
 
       <div className="mb-2 flex items-baseline justify-between">
         <span className="text-xs text-gray-400">已還款</span>
@@ -85,12 +138,37 @@ export default function DebtProgress({
             {formatTWD(monthlyPayment)}
           </p>
         </div>
-        <div>
-          <p className="text-xs text-gray-400">預計還清</p>
-          <p className="mt-1 text-sm font-semibold text-gray-900">
-            {estimatedPayoffDate}
-          </p>
-        </div>
+        {paymentDay && nextPaymentStr ? (
+          <div>
+            <p className="text-xs text-gray-400">下次還款日</p>
+            <p className="mt-1 text-sm font-semibold text-gray-900">
+              {nextPaymentStr}
+            </p>
+          </div>
+        ) : (
+          <div>
+            <p className="text-xs text-gray-400">預計還清</p>
+            <p className="mt-1 text-sm font-semibold text-gray-900">
+              {estimatedPayoffDate}
+            </p>
+          </div>
+        )}
+        {paymentDay && (
+          <div>
+            <p className="text-xs text-gray-400">每月還款日</p>
+            <p className="mt-1 text-sm font-semibold text-gray-900">
+              每月 {paymentDay} 日
+            </p>
+          </div>
+        )}
+        {paymentDay && (
+          <div>
+            <p className="text-xs text-gray-400">預計還清</p>
+            <p className="mt-1 text-sm font-semibold text-gray-900">
+              {estimatedPayoffDate}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

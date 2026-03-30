@@ -112,8 +112,9 @@ export default function CashPage() {
   const FormFields = (
     <div className="space-y-3">
       <div>
-        <label className="text-xs text-gray-500">帳戶名稱</label>
+        <label htmlFor="cash-name" className="text-xs text-gray-500">帳戶名稱</label>
         <Input
+          id="cash-name"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           placeholder="e.g. 台幣活存, USD Savings"
@@ -121,19 +122,21 @@ export default function CashPage() {
         />
       </div>
       <div>
-        <label className="text-xs text-gray-500">幣別</label>
+        <label htmlFor="cash-currency" className="text-xs text-gray-500">幣別</label>
         <select
+          id="cash-currency"
           value={form.currency}
           onChange={(e) => setForm({ ...form, currency: e.target.value })}
-          className="mt-1 w-full h-8 rounded-lg border border-gray-200 bg-white px-2.5 text-sm text-gray-900"
+          className="mt-1 w-full h-8 rounded-lg border border-gray-200 bg-white px-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-ring"
         >
           <option value="TWD">TWD 新台幣</option>
           <option value="USD">USD 美元</option>
         </select>
       </div>
       <div>
-        <label className="text-xs text-gray-500">金額</label>
+        <label htmlFor="cash-amount" className="text-xs text-gray-500">金額</label>
         <Input
+          id="cash-amount"
           type="number"
           value={form.quantity}
           onChange={(e) => setForm({ ...form, quantity: e.target.value })}
