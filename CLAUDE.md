@@ -20,5 +20,5 @@ Next.js app with Prisma ORM for personal finance portfolio management.
 ### Setup TODO
 - [x] Create Vercel project
 - [x] First production deploy
-- [ ] Connect GitHub repo to Vercel for auto-deploy on push (via Vercel dashboard → Git Integration)
+- [x] Connect GitHub repo to Vercel for auto-deploy on push (via Vercel dashboard → Git Integration)
 - [x] Optionally add a `/api/health` route for better health checks
