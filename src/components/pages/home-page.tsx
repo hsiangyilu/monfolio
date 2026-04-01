@@ -382,9 +382,9 @@ export default function ClientHomePage() {
       </div>
 
       {/* Two-column: Asset List + Chart */}
-      <div className="grid grid-cols-12 gap-5">
+      <div className="flex flex-col lg:flex-row gap-5 items-stretch">
         {/* Left column: Asset categories */}
-        <div className="col-span-12 lg:col-span-4 xl:col-span-3 space-y-3">
+        <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-col gap-3 shrink-0">
           {CATEGORY_META.map((cat) => {
             const Icon = cat.icon;
             const value =
@@ -401,7 +401,7 @@ export default function ClientHomePage() {
               <Link
                 key={cat.key}
                 href={cat.slug}
-                className="group block rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors duration-150 hover:border-gray-300 p-4"
+                className="flex-1 group flex flex-col justify-center rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors duration-150 hover:border-gray-300 p-4"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -460,7 +460,7 @@ export default function ClientHomePage() {
         </div>
 
         {/* Right column: Allocation + Net Worth Chart */}
-        <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col gap-5 h-full">
+        <div className="flex-1 flex flex-col gap-5 min-w-0">
           {/* Mini allocation donut */}
           <div className="card-premium rounded-lg p-4">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">
