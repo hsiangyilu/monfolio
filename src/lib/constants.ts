@@ -6,6 +6,7 @@ import {
   Wallet,
   CreditCard,
   Settings,
+  BarChart2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -39,6 +40,7 @@ export const navItems: NavItem[] = [
   { slug: "crypto", label: "虛擬貨幣", href: "/crypto", icon: Bitcoin, color: "#f59e0b" },
   { slug: "cash", label: "現金", href: "/cash", icon: Wallet, color: "#22c55e" },
   { slug: "debt", label: "負債", href: "/debt", icon: CreditCard, color: "#ef4444" },
+  { slug: "insights", label: "Insights", href: "/insights", icon: BarChart2, color: "#a78bfa" },
   { slug: "settings", label: "Settings", href: "/settings", icon: Settings, color: "#94a3b8" },
 ];
 
