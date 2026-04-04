@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import useSWR from "swr";
 import {
   AreaChart,
@@ -22,6 +22,7 @@ import {
   AlertCircle,
   Target,
   Activity,
+  ArrowUpDown,
 } from "lucide-react";
 import type {
   Holding,
@@ -44,6 +45,34 @@ const CATEGORY_META = [
   { key: "cash" as const, label: "現金", color: "#7bb155" },
 ];
 
+type TimeRange = "1M" | "3M" | "6M" | "ALL";
+type HoldingsSort = "value" | "pnl_pct";
+
+// ── Amortization interest calculator ────────────────────────────────────────
+// Uses month-by-month simulation with interestRate for accuracy.
+// Falls back to simple formula when rate is 0 (flat/interest-free loan).
+function calcRemainingInterest(
+  remainingBalance: number,
+  annualRatePct: number,
+  monthlyPayment: number,
+  remainingTerms: number
+): number {
+  if (annualRatePct <= 0) {
+    return Math.max(0, monthlyPayment * remainingTerms - remainingBalance);
+  }
+  const monthlyRate = annualRatePct / 100 / 12;
+  let totalInterest = 0;
+  let balance = remainingBalance;
+  for (let i = 0; i < remainingTerms && balance > 0.01; i++) {
+    const interest = balance * monthlyRate;
+    const principal = Math.min(monthlyPayment - interest, balance);
+    totalInterest += interest;
+    balance -= principal;
+  }
+  return Math.max(0, totalInterest);
+}
+
+// ── Sub-components ───────────────────────────────────────────────────────────
 function StatCard({
   label,
   value,
@@ -79,7 +108,7 @@ function PnlTooltip({
   label,
 }: {
   active?: boolean;
-  payload?: Array<{ value: number; name: string }>;
+  payload?: Array<{ value: number }>;
   label?: string;
 }) {
   if (!active || !payload?.length) return null;
@@ -132,7 +161,11 @@ function HistoryTooltip({
   );
 }
 
+// ── Main component ───────────────────────────────────────────────────────────
 export default function InsightsPage() {
+  const [timeRange, setTimeRange] = useState<TimeRange>("ALL");
+  const [holdingsSort, setHoldingsSort] = useState<HoldingsSort>("value");
+
   const { data: holdings, isLoading: holdingsLoading } =
     useSWR<GroupedHoldings>("/api/holdings", fetcher);
   const { data: twPrices } = useSWR<Record<string, TwStockPrice>>(
@@ -160,7 +193,7 @@ export default function InsightsPage() {
 
   const usdTwd = fxRate?.usdTwd ?? 31;
 
-  // ── Market values per category ──────────────────────────────────────
+  // ── Market values per category ─────────────────────────────────────────────
   const categoryValues = useMemo(() => {
     if (!holdings)
       return { tw_stock: 0, us_stock: 0, crypto: 0, cash: 0, debt: 0 };
@@ -179,8 +212,7 @@ export default function InsightsPage() {
     });
     let cash = 0;
     holdings["cash"]?.forEach((h: Holding) => {
-      cash +=
-        h.costCurrency === "USD" ? h.quantity * usdTwd : h.quantity;
+      cash += h.costCurrency === "USD" ? h.quantity * usdTwd : h.quantity;
     });
     let debt = 0;
     if (Array.isArray(debts)) debts.forEach((d) => { debt += d.remainingBalance; });
@@ -195,28 +227,21 @@ export default function InsightsPage() {
     categoryValues.cash;
   const totalNetWorth = totalAssets - categoryValues.debt;
 
-  // ── Unrealized P&L per category ─────────────────────────────────────
+  // ── Unrealized P&L per category ────────────────────────────────────────────
   const pnlByCategory = useMemo(() => {
     if (!holdings) return [];
 
-    const tw =
-      (holdings["tw_stock"] ?? []).reduce((sum: number, h: Holding) => {
-        const mv = h.quantity * (twPrices?.[h.symbol]?.price ?? 0);
-        return sum + mv - (h.costBasis ?? 0);
-      }, 0);
+    const tw = (holdings["tw_stock"] ?? []).reduce((sum: number, h: Holding) => {
+      return sum + h.quantity * (twPrices?.[h.symbol]?.price ?? 0) - (h.costBasis ?? 0);
+    }, 0);
 
-    const us =
-      (holdings["us_stock"] ?? []).reduce((sum: number, h: Holding) => {
-        const mv = h.quantity * (usPrices?.[h.symbol]?.price ?? 0) * usdTwd;
-        return sum + mv - (h.costBasis ?? 0);
-      }, 0);
+    const us = (holdings["us_stock"] ?? []).reduce((sum: number, h: Holding) => {
+      return sum + h.quantity * (usPrices?.[h.symbol]?.price ?? 0) * usdTwd - (h.costBasis ?? 0);
+    }, 0);
 
-    const crypto =
-      (holdings["crypto"] ?? []).reduce((sum: number, h: Holding) => {
-        const mv =
-          h.quantity * (cryptoPrices?.[h.symbol]?.price ?? 0) * usdTwd;
-        return sum + mv - (h.costBasis ?? 0);
-      }, 0);
+    const crypto = (holdings["crypto"] ?? []).reduce((sum: number, h: Holding) => {
+      return sum + h.quantity * (cryptoPrices?.[h.symbol]?.price ?? 0) * usdTwd - (h.costBasis ?? 0);
+    }, 0);
 
     return [
       { name: "台股", pnl: tw, color: "#e8b462" },
@@ -226,57 +251,61 @@ export default function InsightsPage() {
   }, [holdings, twPrices, usPrices, cryptoPrices, usdTwd]);
 
   const totalPnl = pnlByCategory.reduce((s, c) => s + c.pnl, 0);
+
   const totalCostBasis = useMemo(() => {
     if (!holdings) return 0;
     let basis = 0;
     (["tw_stock", "us_stock", "crypto"] as const).forEach((cat) => {
-      holdings[cat]?.forEach((h: Holding) => {
-        basis += h.costBasis ?? 0;
-      });
+      holdings[cat]?.forEach((h: Holding) => { basis += h.costBasis ?? 0; });
     });
     return basis;
   }, [holdings]);
+
   const totalPnlPct = totalCostBasis > 0 ? (totalPnl / totalCostBasis) * 100 : 0;
 
-  // ── Net worth MoM growth (from snapshots) ───────────────────────────
-  const { momChange, momChangePct } = useMemo(() => {
+  // ── Net worth growth — with fallback to oldest snapshot ────────────────────
+  const { momChange, momChangePct, momLabel } = useMemo(() => {
     if (!snapshots || snapshots.length < 2)
-      return { momChange: null, momChangePct: null };
+      return { momChange: null, momChangePct: null, momLabel: null };
 
     const sorted = [...snapshots].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
     const latest = sorted[0].totalNetWorth;
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setDate(oneMonthAgo.getDate() - 30);
 
-    const past = sorted.find(
-      (s) => new Date(s.createdAt) <= oneMonthAgo
-    );
-    if (!past) return { momChange: null, momChangePct: null };
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Try 30-day snapshot first; fall back to oldest available
+    let past = sorted.find((s) => new Date(s.createdAt) <= thirtyDaysAgo);
+    let label = "vs 30 天前";
+
+    if (!past) {
+      past = sorted[sorted.length - 1];
+      const d = new Date(past.createdAt);
+      label = `自 ${d.toLocaleDateString("zh-TW", { month: "short", day: "numeric" })} 起`;
+    }
 
     const change = latest - past.totalNetWorth;
     const pct = past.totalNetWorth > 0 ? (change / past.totalNetWorth) * 100 : 0;
-    return { momChange: change, momChangePct: pct };
+    return { momChange: change, momChangePct: pct, momLabel: label };
   }, [snapshots]);
 
-  // ── Debt-to-asset ratio ──────────────────────────────────────────────
+  // ── Debt-to-asset ratio ────────────────────────────────────────────────────
   const debtToAsset =
     totalAssets > 0 ? (categoryValues.debt / totalAssets) * 100 : 0;
 
-  // ── History chart data (from snapshots) ─────────────────────────────
+  // ── History chart data — preserves rawDate for range filtering ─────────────
   const historyData = useMemo(() => {
     if (!snapshots) return [];
     return [...snapshots]
-      .sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      )
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
       .map((s) => ({
         date: new Date(s.createdAt).toLocaleDateString("zh-TW", {
           month: "short",
           day: "numeric",
         }),
+        rawDate: new Date(s.createdAt),
         tw_stock: s.twStockValue,
         us_stock: s.usStockValue,
         crypto: s.cryptoValue,
@@ -284,16 +313,21 @@ export default function InsightsPage() {
       }));
   }, [snapshots]);
 
-  // ── Allocation vs target ─────────────────────────────────────────────
+  const filteredHistoryData = useMemo(() => {
+    if (timeRange === "ALL") return historyData;
+    const cutoff = new Date();
+    const months = timeRange === "1M" ? 1 : timeRange === "3M" ? 3 : 6;
+    cutoff.setMonth(cutoff.getMonth() - months);
+    return historyData.filter((d) => d.rawDate >= cutoff);
+  }, [historyData, timeRange]);
+
+  // ── Allocation vs target ───────────────────────────────────────────────────
   const allocationRows = useMemo(() => {
     const targetMap = new Map<string, number>();
     targets?.forEach((t) => targetMap.set(t.category, t.targetPct));
 
     return CATEGORY_META.map((cat) => {
-      const value =
-        cat.key === "cash"
-          ? categoryValues.cash
-          : categoryValues[cat.key] ?? 0;
+      const value = categoryValues[cat.key] ?? 0;
       const actual = totalAssets > 0 ? (value / totalAssets) * 100 : 0;
       const target = targetMap.get(cat.key) ?? null;
       const drift = target !== null ? actual - target : null;
@@ -301,14 +335,13 @@ export default function InsightsPage() {
     });
   }, [categoryValues, totalAssets, targets]);
 
-  // ── Top holdings by portfolio weight ────────────────────────────────
-  const topHoldings = useMemo(() => {
+  // ── Holdings rows (all investable categories) ──────────────────────────────
+  const allHoldingRows = useMemo(() => {
     if (!holdings) return [];
 
     const rows: {
       symbol: string;
       name: string;
-      category: string;
       color: string;
       marketValueTwd: number;
       pct: number;
@@ -317,75 +350,76 @@ export default function InsightsPage() {
     }[] = [];
 
     holdings["tw_stock"]?.forEach((h: Holding) => {
-      const price = twPrices?.[h.symbol]?.price ?? 0;
-      const mv = h.quantity * price;
+      const mv = h.quantity * (twPrices?.[h.symbol]?.price ?? 0);
       const pnl = mv - (h.costBasis ?? 0);
-      const pnlPct =
-        (h.costBasis ?? 0) > 0 ? (pnl / (h.costBasis ?? 1)) * 100 : 0;
       rows.push({
         symbol: h.symbol,
         name: h.name,
-        category: "台股",
         color: "#e8b462",
         marketValueTwd: mv,
         pct: totalAssets > 0 ? (mv / totalAssets) * 100 : 0,
         pnl,
-        pnlPct,
+        pnlPct: (h.costBasis ?? 0) > 0 ? (pnl / h.costBasis!) * 100 : 0,
       });
     });
 
     holdings["us_stock"]?.forEach((h: Holding) => {
-      const price = usPrices?.[h.symbol]?.price ?? 0;
-      const mv = h.quantity * price * usdTwd;
+      const mv = h.quantity * (usPrices?.[h.symbol]?.price ?? 0) * usdTwd;
       const pnl = mv - (h.costBasis ?? 0);
-      const pnlPct =
-        (h.costBasis ?? 0) > 0 ? (pnl / (h.costBasis ?? 1)) * 100 : 0;
       rows.push({
         symbol: h.symbol,
         name: h.name,
-        category: "美股",
         color: "#cd7b65",
         marketValueTwd: mv,
         pct: totalAssets > 0 ? (mv / totalAssets) * 100 : 0,
         pnl,
-        pnlPct,
+        pnlPct: (h.costBasis ?? 0) > 0 ? (pnl / h.costBasis!) * 100 : 0,
       });
     });
 
     holdings["crypto"]?.forEach((h: Holding) => {
-      const price = cryptoPrices?.[h.symbol]?.price ?? 0;
-      const mv = h.quantity * price * usdTwd;
+      const mv = h.quantity * (cryptoPrices?.[h.symbol]?.price ?? 0) * usdTwd;
       const pnl = mv - (h.costBasis ?? 0);
-      const pnlPct =
-        (h.costBasis ?? 0) > 0 ? (pnl / (h.costBasis ?? 1)) * 100 : 0;
       rows.push({
         symbol: h.symbol,
         name: h.name,
-        category: "虛擬貨幣",
         color: "#f8a01d",
         marketValueTwd: mv,
         pct: totalAssets > 0 ? (mv / totalAssets) * 100 : 0,
         pnl,
-        pnlPct,
+        pnlPct: (h.costBasis ?? 0) > 0 ? (pnl / h.costBasis!) * 100 : 0,
       });
     });
 
-    return rows.sort((a, b) => b.marketValueTwd - a.marketValueTwd).slice(0, 10);
+    return rows;
   }, [holdings, twPrices, usPrices, cryptoPrices, usdTwd, totalAssets]);
 
-  // ── Debt summary ────────────────────────────────────────────────────
+  const sortedHoldings = useMemo(() => {
+    const sorted =
+      holdingsSort === "value"
+        ? [...allHoldingRows].sort((a, b) => b.marketValueTwd - a.marketValueTwd)
+        : [...allHoldingRows].sort((a, b) => b.pnlPct - a.pnlPct);
+    return sorted.slice(0, 10);
+  }, [allHoldingRows, holdingsSort]);
+
+  // ── Debt summary — amortization-based interest ────────────────────────────
   const debtSummary = useMemo(() => {
     if (!Array.isArray(debts) || debts.length === 0) return null;
     const totalRemaining = debts.reduce((s, d) => s + d.remainingBalance, 0);
     const totalOriginal = debts.reduce((s, d) => s + d.principalTotal, 0);
     const totalMonthly = debts.reduce((s, d) => s + d.monthlyPayment, 0);
-    const totalInterest = debts.reduce((d_sum, d) => {
-      const totalPaid = d.monthlyPayment * d.remainingTerms;
-      return d_sum + totalPaid - d.remainingBalance;
+    const totalInterest = debts.reduce((s, d) => {
+      return s + calcRemainingInterest(
+        d.remainingBalance,
+        d.interestRate,
+        d.monthlyPayment,
+        d.remainingTerms
+      );
     }, 0);
     return { totalRemaining, totalOriginal, totalMonthly, totalInterest };
   }, [debts]);
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   if (holdingsLoading) {
     return (
       <div className="space-y-6 animate-pulse">
@@ -422,16 +456,14 @@ export default function InsightsPage() {
           positive={totalPnl >= 0}
         />
         <StatCard
-          label="月增減 (30d)"
+          label={momLabel ?? "增減"}
           value={
             momChange !== null
               ? `${momChange >= 0 ? "+" : ""}${formatTWD(momChange)}`
               : "—"
           }
           sub={
-            momChangePct !== null
-              ? formatPercent(momChangePct)
-              : "需要更多快照"
+            momChangePct !== null ? formatPercent(momChangePct) : "快照不足"
           }
           positive={momChange !== null ? momChange >= 0 : undefined}
           neutral={momChange === null}
@@ -502,13 +534,9 @@ export default function InsightsPage() {
             </ResponsiveContainer>
           )}
 
-          {/* P&L summary rows */}
           <div className="mt-4 space-y-2 border-t border-gray-100 pt-4">
             {pnlByCategory.map((cat) => (
-              <div
-                key={cat.name}
-                className="flex items-center justify-between"
-              >
+              <div key={cat.name} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span
                     className="h-2.5 w-2.5 rounded-full"
@@ -529,25 +557,46 @@ export default function InsightsPage() {
           </div>
         </div>
 
-        {/* Historical stacked area chart */}
+        {/* Historical stacked area chart with time range filter */}
         <div className="card-premium rounded-xl p-6">
-          <h2 className="text-sm font-semibold text-gray-900 mb-4">
-            資產類別歷史走勢
-          </h2>
-          {historyData.length < 2 ? (
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-gray-900">
+              資產類別歷史走勢
+            </h2>
+            {/* Time range tabs */}
+            <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 p-0.5">
+              {(["1M", "3M", "6M", "ALL"] as TimeRange[]).map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setTimeRange(r)}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                    timeRange === r
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-400 hover:text-gray-600"
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {filteredHistoryData.length < 2 ? (
             <div className="flex flex-col items-center justify-center h-48 text-gray-400">
               <TrendingUp className="w-8 h-8 text-gray-300 mb-2" />
-              <p className="text-sm">需要更多歷史快照</p>
+              <p className="text-sm">
+                {timeRange === "ALL" ? "需要更多歷史快照" : `${timeRange} 內無足夠資料`}
+              </p>
               <p className="text-xs text-gray-400 mt-1">每日造訪將自動記錄</p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart
-                data={historyData}
+                data={filteredHistoryData}
                 margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
               >
                 <defs>
-                  {CATEGORY_META.filter((c) => c.key !== "cash").map((cat) => (
+                  {CATEGORY_META.map((cat) => (
                     <linearGradient
                       key={cat.key}
                       id={`grad-${cat.key}`}
@@ -556,16 +605,8 @@ export default function InsightsPage() {
                       x2="0"
                       y2="1"
                     >
-                      <stop
-                        offset="0%"
-                        stopColor={cat.color}
-                        stopOpacity={0.3}
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor={cat.color}
-                        stopOpacity={0}
-                      />
+                      <stop offset="0%" stopColor={cat.color} stopOpacity={0.3} />
+                      <stop offset="100%" stopColor={cat.color} stopOpacity={0} />
                     </linearGradient>
                   ))}
                 </defs>
@@ -606,7 +647,6 @@ export default function InsightsPage() {
             </ResponsiveContainer>
           )}
 
-          {/* Legend */}
           <div className="mt-4 flex flex-wrap gap-3 border-t border-gray-100 pt-4">
             {CATEGORY_META.map((cat) => (
               <div key={cat.key} className="flex items-center gap-1.5">
@@ -627,9 +667,7 @@ export default function InsightsPage() {
         <div className="card-premium rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <Target className="w-4 h-4 text-gray-400" />
-            <h2 className="text-sm font-semibold text-gray-900">
-              配比 vs 目標
-            </h2>
+            <h2 className="text-sm font-semibold text-gray-900">配比 vs 目標</h2>
           </div>
           <div className="space-y-4">
             {allocationRows.map((row) => (
@@ -665,9 +703,7 @@ export default function InsightsPage() {
                     )}
                   </div>
                 </div>
-                {/* Dual progress bar: actual vs target */}
                 <div className="relative h-2 w-full rounded-full bg-gray-100 overflow-hidden">
-                  {/* Actual */}
                   <div
                     className="absolute left-0 top-0 h-full rounded-full transition-all duration-700"
                     style={{
@@ -676,7 +712,6 @@ export default function InsightsPage() {
                       opacity: 0.8,
                     }}
                   />
-                  {/* Target marker */}
                   {row.target !== null && (
                     <div
                       className="absolute top-0 h-full w-0.5 bg-gray-500 opacity-50"
@@ -705,19 +740,29 @@ export default function InsightsPage() {
           )}
         </div>
 
-        {/* Top holdings */}
+        {/* Top holdings with sort toggle */}
         <div className="card-premium rounded-xl p-6">
-          <h2 className="text-sm font-semibold text-gray-900 mb-4">
-            持倉排行（市值）
-          </h2>
-          {topHoldings.length === 0 ? (
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-gray-900">持倉排行</h2>
+            <button
+              onClick={() =>
+                setHoldingsSort((s) => (s === "value" ? "pnl_pct" : "value"))
+              }
+              className="flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+            >
+              <ArrowUpDown className="w-3 h-3" />
+              {holdingsSort === "value" ? "市值" : "損益率"}
+            </button>
+          </div>
+
+          {sortedHoldings.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-gray-400">
               <TrendingDown className="w-8 h-8 text-gray-300 mb-2" />
               <p className="text-sm">尚無持倉資料</p>
             </div>
           ) : (
             <div className="space-y-2">
-              {topHoldings.map((h, i) => (
+              {sortedHoldings.map((h, i) => (
                 <div
                   key={h.symbol}
                   className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0"
@@ -733,22 +778,38 @@ export default function InsightsPage() {
                     <p className="text-sm font-medium text-gray-900 truncate">
                       {h.symbol}
                     </p>
-                    <p className="text-[11px] text-gray-400 truncate">
-                      {h.name}
-                    </p>
+                    <p className="text-[11px] text-gray-400 truncate">{h.name}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-semibold text-gray-900 tabular-nums">
-                      {h.pct.toFixed(1)}%
-                    </p>
-                    <p
-                      className={`text-[11px] tabular-nums ${
-                        h.pnl >= 0 ? "text-[#7bb155]" : "text-[#f44336]"
-                      }`}
-                    >
-                      {h.pnl >= 0 ? "+" : ""}
-                      {formatTWD(h.pnl)}
-                    </p>
+                    {holdingsSort === "value" ? (
+                      <>
+                        <p className="text-sm font-semibold text-gray-900 tabular-nums">
+                          {h.pct.toFixed(1)}%
+                        </p>
+                        <p
+                          className={`text-[11px] tabular-nums ${
+                            h.pnl >= 0 ? "text-[#7bb155]" : "text-[#f44336]"
+                          }`}
+                        >
+                          {h.pnl >= 0 ? "+" : ""}
+                          {formatTWD(h.pnl)}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p
+                          className={`text-sm font-semibold tabular-nums ${
+                            h.pnlPct >= 0 ? "text-[#7bb155]" : "text-[#f44336]"
+                          }`}
+                        >
+                          {h.pnlPct >= 0 ? "+" : ""}
+                          {h.pnlPct.toFixed(1)}%
+                        </p>
+                        <p className="text-[11px] text-gray-400 tabular-nums">
+                          {formatTWD(h.marketValueTwd)}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
@@ -760,9 +821,7 @@ export default function InsightsPage() {
       {/* ── Debt Analysis ── */}
       {debtSummary && (
         <div className="card-premium rounded-xl p-6">
-          <h2 className="text-sm font-semibold text-gray-900 mb-4">
-            負債分析
-          </h2>
+          <h2 className="text-sm font-semibold text-gray-900 mb-4">負債分析</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
             <div>
               <p className="text-xs text-gray-400 mb-1">剩餘總負債</p>
@@ -790,14 +849,11 @@ export default function InsightsPage() {
             </div>
           </div>
 
-          {/* Debt progress bars */}
           <div className="space-y-3">
             {(debts ?? []).map((d) => {
               const paidPct =
                 d.principalTotal > 0
-                  ? ((d.principalTotal - d.remainingBalance) /
-                      d.principalTotal) *
-                    100
+                  ? ((d.principalTotal - d.remainingBalance) / d.principalTotal) * 100
                   : 0;
               return (
                 <div key={d.id}>
@@ -806,8 +862,7 @@ export default function InsightsPage() {
                       {d.name}
                     </span>
                     <span className="text-xs text-gray-400 tabular-nums">
-                      {formatTWD(d.remainingBalance)} 剩餘 ·{" "}
-                      {d.interestRate.toFixed(2)}%
+                      {formatTWD(d.remainingBalance)} 剩餘 · {d.interestRate.toFixed(2)}%
                     </span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
