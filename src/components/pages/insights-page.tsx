@@ -43,6 +43,15 @@ const CATEGORY_META = [
   { key: "cash" as const, label: "現金", color: "#7bb155" },
 ];
 
+// ── Cost basis normalised to TWD ─────────────────────────────────────────────
+// costBasis may be stored in USD (for US stocks/crypto entered in original currency).
+// Always convert to TWD before comparing with market value.
+function costTwd(h: Holding, usdTwd: number): number {
+  return h.costCurrency === "USD"
+    ? (h.costBasis ?? 0) * usdTwd
+    : (h.costBasis ?? 0);
+}
+
 type TimeRange = "1M" | "3M" | "6M" | "ALL";
 type HoldingsSort = "value" | "pnl_pct";
 
@@ -230,15 +239,15 @@ export default function InsightsPage() {
     if (!holdings) return [];
 
     const tw = (holdings["tw_stock"] ?? []).reduce((sum: number, h: Holding) => {
-      return sum + h.quantity * (twPrices?.[h.symbol]?.price ?? 0) - (h.costBasis ?? 0);
+      return sum + h.quantity * (twPrices?.[h.symbol]?.price ?? 0) - costTwd(h, usdTwd);
     }, 0);
 
     const us = (holdings["us_stock"] ?? []).reduce((sum: number, h: Holding) => {
-      return sum + h.quantity * (usPrices?.[h.symbol]?.price ?? 0) * usdTwd - (h.costBasis ?? 0);
+      return sum + h.quantity * (usPrices?.[h.symbol]?.price ?? 0) * usdTwd - costTwd(h, usdTwd);
     }, 0);
 
     const crypto = (holdings["crypto"] ?? []).reduce((sum: number, h: Holding) => {
-      return sum + h.quantity * (cryptoPrices?.[h.symbol]?.price ?? 0) * usdTwd - (h.costBasis ?? 0);
+      return sum + h.quantity * (cryptoPrices?.[h.symbol]?.price ?? 0) * usdTwd - costTwd(h, usdTwd);
     }, 0);
 
     return [
@@ -254,10 +263,10 @@ export default function InsightsPage() {
     if (!holdings) return 0;
     let basis = 0;
     (["tw_stock", "us_stock", "crypto"] as const).forEach((cat) => {
-      holdings[cat]?.forEach((h: Holding) => { basis += h.costBasis ?? 0; });
+      holdings[cat]?.forEach((h: Holding) => { basis += costTwd(h, usdTwd); });
     });
     return basis;
-  }, [holdings]);
+  }, [holdings, usdTwd]);
 
   const totalPnlPct = totalCostBasis > 0 ? (totalPnl / totalCostBasis) * 100 : 0;
 
@@ -349,7 +358,8 @@ export default function InsightsPage() {
 
     holdings["tw_stock"]?.forEach((h: Holding) => {
       const mv = h.quantity * (twPrices?.[h.symbol]?.price ?? 0);
-      const pnl = mv - (h.costBasis ?? 0);
+      const basis = costTwd(h, usdTwd);
+      const pnl = mv - basis;
       rows.push({
         symbol: h.symbol,
         name: h.name,
@@ -357,13 +367,14 @@ export default function InsightsPage() {
         marketValueTwd: mv,
         pct: totalAssets > 0 ? (mv / totalAssets) * 100 : 0,
         pnl,
-        pnlPct: (h.costBasis ?? 0) > 0 ? (pnl / h.costBasis!) * 100 : 0,
+        pnlPct: basis > 0 ? (pnl / basis) * 100 : 0,
       });
     });
 
     holdings["us_stock"]?.forEach((h: Holding) => {
       const mv = h.quantity * (usPrices?.[h.symbol]?.price ?? 0) * usdTwd;
-      const pnl = mv - (h.costBasis ?? 0);
+      const basis = costTwd(h, usdTwd);
+      const pnl = mv - basis;
       rows.push({
         symbol: h.symbol,
         name: h.name,
@@ -371,13 +382,14 @@ export default function InsightsPage() {
         marketValueTwd: mv,
         pct: totalAssets > 0 ? (mv / totalAssets) * 100 : 0,
         pnl,
-        pnlPct: (h.costBasis ?? 0) > 0 ? (pnl / h.costBasis!) * 100 : 0,
+        pnlPct: basis > 0 ? (pnl / basis) * 100 : 0,
       });
     });
 
     holdings["crypto"]?.forEach((h: Holding) => {
       const mv = h.quantity * (cryptoPrices?.[h.symbol]?.price ?? 0) * usdTwd;
-      const pnl = mv - (h.costBasis ?? 0);
+      const basis = costTwd(h, usdTwd);
+      const pnl = mv - basis;
       rows.push({
         symbol: h.symbol,
         name: h.name,
@@ -385,7 +397,7 @@ export default function InsightsPage() {
         marketValueTwd: mv,
         pct: totalAssets > 0 ? (mv / totalAssets) * 100 : 0,
         pnl,
-        pnlPct: (h.costBasis ?? 0) > 0 ? (pnl / h.costBasis!) * 100 : 0,
+        pnlPct: basis > 0 ? (pnl / basis) * 100 : 0,
       });
     });
 
