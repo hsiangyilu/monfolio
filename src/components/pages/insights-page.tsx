@@ -21,7 +21,6 @@ import {
   TrendingDown,
   AlertCircle,
   Activity,
-  ArrowUpDown,
 } from "lucide-react";
 import type {
   Holding,
@@ -736,15 +735,21 @@ export default function InsightsPage() {
         <div className="card-premium rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-gray-900">持倉排行</h2>
-            <button
-              onClick={() =>
-                setHoldingsSort((s) => (s === "value" ? "pnl_pct" : "value"))
-              }
-              className="flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-            >
-              <ArrowUpDown className="w-3 h-3" />
-              {holdingsSort === "value" ? "市值" : "損益率"}
-            </button>
+            <div className="flex items-center gap-0.5 rounded-lg bg-gray-100 p-0.5">
+              {(["value", "pnl_pct"] as HoldingsSort[]).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setHoldingsSort(s)}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                    holdingsSort === s
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-400 hover:text-gray-600"
+                  }`}
+                >
+                  {s === "value" ? "市值" : "損益率"}
+                </button>
+              ))}
+            </div>
           </div>
 
           {sortedHoldings.length === 0 ? (
