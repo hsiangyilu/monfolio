@@ -397,7 +397,7 @@ export default function InsightsPage() {
     const sorted =
       holdingsSort === "value"
         ? [...allHoldingRows].sort((a, b) => b.marketValueTwd - a.marketValueTwd)
-        : [...allHoldingRows].sort((a, b) => b.pnlPct - a.pnlPct);
+        : [...allHoldingRows].sort((a, b) => a.pnlPct - b.pnlPct);
     return sorted.slice(0, 10);
   }, [allHoldingRows, holdingsSort]);
 
@@ -468,8 +468,7 @@ export default function InsightsPage() {
           label="負債比率"
           value={`${debtToAsset.toFixed(1)}%`}
           sub={`負債 ${formatTWD(categoryValues.debt)}`}
-          positive={debtToAsset < 30}
-          neutral={categoryValues.debt === 0}
+          neutral
         />
         <StatCard
           label="總資產"
@@ -744,7 +743,7 @@ export default function InsightsPage() {
               className="flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
             >
               <ArrowUpDown className="w-3 h-3" />
-              {holdingsSort === "value" ? "市值" : "損益率"}
+              {holdingsSort === "value" ? "市值" : "損益率 ↑"}
             </button>
           </div>
 
