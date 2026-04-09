@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Settings, Save, Loader2 } from "lucide-react";
+import { Save, Loader2 } from "lucide-react";
 import type { TargetAllocation } from "@/types/index";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -135,10 +135,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-        <Settings className="w-6 h-6 text-gray-400" />
-        設定
-      </h1>
+      <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
 
       <div className="card-premium rounded-2xl p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">

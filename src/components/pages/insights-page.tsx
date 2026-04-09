@@ -20,7 +20,6 @@ import {
   TrendingUp,
   TrendingDown,
   AlertCircle,
-  Target,
   Activity,
   ArrowUpDown,
 } from "lucide-react";
@@ -89,8 +88,8 @@ function StatCard({
   const valueColor = neutral
     ? "text-gray-900"
     : positive
-    ? "text-[#7bb155]"
-    : "text-[#f44336]";
+    ? "text-[#f44336]"
+    : "text-[#7bb155]";
   return (
     <div className="card-premium rounded-xl p-5">
       <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
@@ -442,9 +441,6 @@ export default function InsightsPage() {
       {/* Page header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Insights</h1>
-        <p className="text-sm text-gray-400 mt-1">
-          Portfolio performance & allocation analysis
-        </p>
       </div>
 
       {/* ── Key Metrics ── */}
@@ -525,8 +521,8 @@ export default function InsightsPage() {
                   {pnlByCategory.map((entry, i) => (
                     <Cell
                       key={i}
-                      fill={entry.pnl >= 0 ? "#7bb155" : "#f44336"}
-                      fillOpacity={0.85}
+                      fill={entry.color}
+                      fillOpacity={0.9}
                     />
                   ))}
                 </Bar>
@@ -546,7 +542,7 @@ export default function InsightsPage() {
                 </div>
                 <span
                   className={`text-xs font-semibold tabular-nums ${
-                    cat.pnl >= 0 ? "text-[#7bb155]" : "text-[#f44336]"
+                    cat.pnl >= 0 ? "text-[#f44336]" : "text-[#7bb155]"
                   }`}
                 >
                   {cat.pnl >= 0 ? "+" : ""}
@@ -665,10 +661,7 @@ export default function InsightsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Allocation analysis */}
         <div className="card-premium rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Target className="w-4 h-4 text-gray-400" />
-            <h2 className="text-sm font-semibold text-gray-900">配比 vs 目標</h2>
-          </div>
+          <h2 className="text-sm font-semibold text-gray-900 mb-4">配比 vs 目標</h2>
           <div className="space-y-4">
             {allocationRows.map((row) => (
               <div key={row.key}>
@@ -788,7 +781,7 @@ export default function InsightsPage() {
                         </p>
                         <p
                           className={`text-[11px] tabular-nums ${
-                            h.pnl >= 0 ? "text-[#7bb155]" : "text-[#f44336]"
+                            h.pnl >= 0 ? "text-[#f44336]" : "text-[#7bb155]"
                           }`}
                         >
                           {h.pnl >= 0 ? "+" : ""}
@@ -799,7 +792,7 @@ export default function InsightsPage() {
                       <>
                         <p
                           className={`text-sm font-semibold tabular-nums ${
-                            h.pnlPct >= 0 ? "text-[#7bb155]" : "text-[#f44336]"
+                            h.pnlPct >= 0 ? "text-[#f44336]" : "text-[#7bb155]"
                           }`}
                         >
                           {h.pnlPct >= 0 ? "+" : ""}
@@ -870,7 +863,7 @@ export default function InsightsPage() {
                       className="h-full rounded-full transition-all duration-700"
                       style={{
                         width: `${Math.min(paidPct, 100)}%`,
-                        backgroundColor: "#7bb155",
+                        background: "linear-gradient(90deg, #cd7b65, #e8b462)",
                       }}
                     />
                   </div>

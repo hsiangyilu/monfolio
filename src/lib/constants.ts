@@ -35,21 +35,21 @@ export const categories: Category[] = [
 
 export const navItems: NavItem[] = [
   { slug: "overview", label: "Overview", href: "/", icon: Home, color: "#00d4ff" },
-  { slug: "tw-stocks", label: "台股", href: "/tw-stocks", icon: TrendingUp, color: "#00d4ff" },
-  { slug: "us-stocks", label: "美股", href: "/us-stocks", icon: Globe, color: "#7c3aed" },
-  { slug: "crypto", label: "虛擬貨幣", href: "/crypto", icon: Bitcoin, color: "#f59e0b" },
-  { slug: "cash", label: "現金", href: "/cash", icon: Wallet, color: "#22c55e" },
-  { slug: "debt", label: "負債", href: "/debt", icon: CreditCard, color: "#ef4444" },
+  { slug: "tw-stocks", label: "TW Stocks", href: "/tw-stocks", icon: TrendingUp, color: "#00d4ff" },
+  { slug: "us-stocks", label: "US Stocks", href: "/us-stocks", icon: Globe, color: "#7c3aed" },
+  { slug: "crypto", label: "Crypto", href: "/crypto", icon: Bitcoin, color: "#f59e0b" },
+  { slug: "cash", label: "Cash", href: "/cash", icon: Wallet, color: "#22c55e" },
+  { slug: "debt", label: "Debt", href: "/debt", icon: CreditCard, color: "#ef4444" },
   { slug: "insights", label: "Insights", href: "/insights", icon: BarChart2, color: "#a78bfa" },
   { slug: "settings", label: "Settings", href: "/settings", icon: Settings, color: "#94a3b8" },
 ];
 
 export const mobileNavItems: NavItem[] = [
   { slug: "overview", label: "Overview", href: "/", icon: Home, color: "#00d4ff" },
-  { slug: "tw-stocks", label: "台股", href: "/tw-stocks", icon: TrendingUp, color: "#00d4ff" },
-  { slug: "us-stocks", label: "美股", href: "/us-stocks", icon: Globe, color: "#7c3aed" },
-  { slug: "crypto", label: "虛擬貨幣", href: "/crypto", icon: Bitcoin, color: "#f59e0b" },
-  { slug: "debt", label: "負債", href: "/debt", icon: CreditCard, color: "#ef4444" },
+  { slug: "tw-stocks", label: "TW Stocks", href: "/tw-stocks", icon: TrendingUp, color: "#00d4ff" },
+  { slug: "us-stocks", label: "US Stocks", href: "/us-stocks", icon: Globe, color: "#7c3aed" },
+  { slug: "crypto", label: "Crypto", href: "/crypto", icon: Bitcoin, color: "#f59e0b" },
+  { slug: "debt", label: "Debt", href: "/debt", icon: CreditCard, color: "#ef4444" },
 ];
 
 export const financialQuotes: { text: string; textZh: string; author: string }[] = [
