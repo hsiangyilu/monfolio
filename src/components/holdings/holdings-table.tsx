@@ -240,7 +240,7 @@ export default function HoldingsTable({
         <Table className="min-w-[640px]">
           <TableHeader>
             <TableRow className="border-gray-100 hover:bg-transparent">
-              <TableHead className="text-gray-500">名稱</TableHead>
+              <TableHead className="text-gray-500 pl-5">名稱</TableHead>
               <TableHead className="text-gray-500">代碼</TableHead>
               <TableHead className="text-gray-500 text-right">持股數量</TableHead>
               <TableHead className="text-gray-500 text-right">
@@ -252,7 +252,7 @@ export default function HoldingsTable({
               <TableHead className="text-gray-500 text-right">市值<span className="text-gray-400 text-[10px] ml-1">(TWD)</span></TableHead>
               <TableHead className="text-gray-500 text-right">未實現損益</TableHead>
               <TableHead className="text-gray-500 text-right">損益%</TableHead>
-              <TableHead className="text-gray-500 text-right">操作</TableHead>
+              <TableHead className="text-gray-500 text-right pr-5">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -280,7 +280,7 @@ export default function HoldingsTable({
                     key={h.id}
                     className="border-gray-100 hover:bg-gray-50"
                   >
-                    <TableCell className="text-gray-900 font-medium">
+                    <TableCell className="text-gray-900 font-medium pl-5">
                       {h.name}
                     </TableCell>
                     <TableCell className="text-gray-500">{h.symbol}</TableCell>
@@ -302,7 +302,7 @@ export default function HoldingsTable({
                     <TableCell className={`text-right font-medium ${pnlColor}`}>
                       {formatPercent(h.pnlPercent)}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right pr-5">
                       <div className="flex items-center justify-end gap-0.5">
                         <Button
                           variant="ghost"

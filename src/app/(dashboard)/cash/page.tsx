@@ -213,11 +213,11 @@ export default function CashPage() {
         <Table>
           <TableHeader>
             <TableRow className="border-gray-100 hover:bg-transparent">
-              <TableHead className="text-gray-500">帳戶</TableHead>
+              <TableHead className="text-gray-500 pl-5">帳戶</TableHead>
               <TableHead className="text-gray-500">幣別</TableHead>
               <TableHead className="text-gray-500 text-right">金額</TableHead>
               <TableHead className="text-gray-500 text-right">折合台幣</TableHead>
-              <TableHead className="text-gray-500 text-right">操作</TableHead>
+              <TableHead className="text-gray-500 text-right pr-5">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -239,7 +239,7 @@ export default function CashPage() {
                     key={h.id}
                     className="border-gray-100 hover:bg-gray-50"
                   >
-                    <TableCell className="text-gray-900 font-medium">
+                    <TableCell className="text-gray-900 font-medium pl-5">
                       {h.name}
                     </TableCell>
                     <TableCell className="text-gray-500">
@@ -251,7 +251,7 @@ export default function CashPage() {
                     <TableCell className="text-gray-900 text-right">
                       {formatTWD(twdValue)}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right pr-5">
                       <div className="flex items-center justify-end gap-1">
                         <Button
                           variant="ghost"

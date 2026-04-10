@@ -60,7 +60,7 @@ const typeSamples = [
   { label: "Quote (EN)", className: "text-xl md:text-2xl font-medium italic text-[#7e706a]", text: '"In investing, what is comfortable is rarely profitable."' },
   { label: "Quote (ZH)", className: "text-xs text-[#7e706a]", text: "在投資中，舒服的東西很少能帶來利潤。" },
   { label: "Body", className: "text-sm text-gray-700", text: "設定各類資產的目標比例，總和需為 100%。" },
-  { label: "Caption / Muted", className: "text-xs text-[#7e706a]", text: "MoneyFlow v0.1 · 最後更新 3 分鐘前" },
+  { label: "Caption / Muted", className: "text-xs text-[#7e706a]", text: "monfolio v0.1 · 最後更新 3 分鐘前" },
   { label: "Label (Uppercase)", className: "text-xs font-medium tracking-wider uppercase text-gray-400", text: "TOTAL NET WORTH" },
   { label: "Tabular Numbers", className: "text-sm font-semibold tabular-nums text-gray-900", text: "NT$ 936,021" },
 ];
@@ -106,7 +106,7 @@ export default function DesignSystemPage() {
     <div className="space-y-10 max-w-4xl">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-1">MoneyFlow Design System</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-1">monfolio Design System</h1>
         <p className="text-sm text-[#7e706a]">v1.0 · Visual Reference · Colormind Warm Palette</p>
       </div>
 
@@ -342,7 +342,7 @@ export default function DesignSystemPage() {
               <div className="w-8 h-8 rounded-lg bg-[#e8b462] flex items-center justify-center">
                 <span className="text-[#3d2b2f] font-bold text-sm">M</span>
               </div>
-              <span className="text-white font-semibold text-sm">MoneyFlow</span>
+              <span className="text-white font-semibold text-sm">monfolio</span>
             </div>
             {[
               { label: "Overview", icon: Home, active: true },
@@ -480,7 +480,7 @@ export default function DesignSystemPage() {
         </div>
       </Section>
 
-      <p className="text-xs text-[#7e706a] text-center pb-8">MoneyFlow Design System v1.0 · Generated 2026-03-23</p>
+      <p className="text-xs text-[#7e706a] text-center pb-8">monfolio Design System v1.0 · Generated 2026-03-23</p>
     </div>
   );
 }
