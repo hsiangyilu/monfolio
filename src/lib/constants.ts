@@ -50,6 +50,7 @@ export const mobileNavItems: NavItem[] = [
   { slug: "us-stocks", label: "US Stocks", href: "/us-stocks", icon: Globe, color: "#7c3aed" },
   { slug: "crypto", label: "Crypto", href: "/crypto", icon: Bitcoin, color: "#f59e0b" },
   { slug: "debt", label: "Debt", href: "/debt", icon: CreditCard, color: "#ef4444" },
+  { slug: "insights", label: "Insights", href: "/insights", icon: BarChart2, color: "#a78bfa" },
 ];
 
 export const financialQuotes: { text: string; textZh: string; author: string }[] = [
