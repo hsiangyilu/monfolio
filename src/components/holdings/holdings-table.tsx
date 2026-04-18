@@ -236,7 +236,7 @@ export default function HoldingsTable({
       </Dialog>
 
       <div className="card-premium rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto -mx-0">
+        <div className="overflow-x-auto">
         <Table className="min-w-[640px]">
           <TableHeader>
             <TableRow className="border-gray-100 hover:bg-transparent">

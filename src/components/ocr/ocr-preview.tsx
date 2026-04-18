@@ -136,7 +136,7 @@ export default function OcrPreview({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white border-gray-200 sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="bg-white border-gray-200 sm:max-w-2xl max-h-[80vh] overflow-y-auto overscroll-y-contain">
         <DialogHeader>
           <DialogTitle>匯入確認</DialogTitle>
           <DialogDescription>
@@ -162,7 +162,7 @@ export default function OcrPreview({
             未找到任何持股資料
           </p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overscroll-x-contain touch-pan-x">
             <Table>
               <TableHeader>
                 <TableRow className="border-gray-100 hover:bg-transparent">
