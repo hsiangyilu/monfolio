@@ -1,18 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { CSSProperties } from "react";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Providers } from "@/components/providers";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -33,7 +23,15 @@ export default function RootLayout({
   return (
     <html lang="zh-TW">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-gradient-dark min-h-screen`}
+        className="font-sans antialiased bg-gradient-dark min-h-screen"
+        style={
+          {
+            "--font-geist-sans":
+              '"SF Pro Text", "PingFang TC", "PingFang SC", "Noto Sans TC", "Microsoft JhengHei", "Helvetica Neue", Arial, sans-serif',
+            "--font-geist-mono":
+              '"SF Mono", "Menlo", "Monaco", "Courier New", monospace',
+          } as CSSProperties
+        }
       >
         <Providers>
           <TooltipProvider>
