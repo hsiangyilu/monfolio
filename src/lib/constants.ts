@@ -46,10 +46,11 @@ export const navItems: NavItem[] = [
 
 export const mobileNavItems: NavItem[] = [
   { slug: "overview", label: "Overview", href: "/", icon: Home, color: "#00d4ff" },
-  { slug: "tw-stocks", label: "TW Stocks", href: "/tw-stocks", icon: TrendingUp, color: "#00d4ff" },
-  { slug: "us-stocks", label: "US Stocks", href: "/us-stocks", icon: Globe, color: "#7c3aed" },
+  { slug: "tw-stocks", label: "TW", href: "/tw-stocks", icon: TrendingUp, color: "#00d4ff" },
+  { slug: "us-stocks", label: "US", href: "/us-stocks", icon: Globe, color: "#7c3aed" },
   { slug: "crypto", label: "Crypto", href: "/crypto", icon: Bitcoin, color: "#f59e0b" },
   { slug: "debt", label: "Debt", href: "/debt", icon: CreditCard, color: "#ef4444" },
+  { slug: "insights", label: "Insights", href: "/insights", icon: BarChart2, color: "#a78bfa" },
 ];
 
 export const financialQuotes: { text: string; textZh: string; author: string }[] = [

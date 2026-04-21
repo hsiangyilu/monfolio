@@ -240,7 +240,7 @@ export default function HoldingsTable({
         <Table className="min-w-[640px]">
           <TableHeader>
             <TableRow className="border-gray-100 hover:bg-transparent">
-              <TableHead className="text-gray-500 pl-5">名稱</TableHead>
+              <TableHead className="text-gray-500 pl-5 sticky left-0 bg-white z-10">名稱</TableHead>
               <TableHead className="text-gray-500">代碼</TableHead>
               <TableHead className="text-gray-500 text-right">持股數量</TableHead>
               <TableHead className="text-gray-500 text-right">
@@ -263,7 +263,7 @@ export default function HoldingsTable({
                 </TableCell>
               </TableRow>
             ) : (
-              holdings.map((h) => {
+              [...holdings].sort((a, b) => b.quantity - a.quantity).map((h) => {
                 const pnlColor =
                   h.unrealizedPnl > 0
                     ? "text-[#f44336]"
@@ -278,9 +278,9 @@ export default function HoldingsTable({
                 return (
                   <TableRow
                     key={h.id}
-                    className="border-gray-100 hover:bg-gray-50"
+                    className="border-gray-100 hover:bg-gray-50 group"
                   >
-                    <TableCell className="text-gray-900 font-medium pl-5">
+                    <TableCell className="text-gray-900 font-medium pl-5 sticky left-0 bg-white z-10 group-hover:bg-gray-50">
                       {h.name}
                     </TableCell>
                     <TableCell className="text-gray-500">{h.symbol}</TableCell>
