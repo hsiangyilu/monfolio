@@ -23,6 +23,9 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "monfolio - 資產管理",
   description: "個人資產管理儀表板 - 追蹤台股、美股、虛擬貨幣、現金與負債",
+  icons: {
+    icon: "/logo.svg",
+  },
 };
 
 export default function RootLayout({

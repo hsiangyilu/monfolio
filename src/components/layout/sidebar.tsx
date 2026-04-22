@@ -11,9 +11,7 @@ export function Sidebar() {
     <aside className="hidden md:flex md:flex-col md:w-[220px] lg:w-[260px] h-screen fixed left-0 top-0 z-40 border-r border-white/[0.12] bg-[#3d2b2f]">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-6">
-        <div className="w-8 h-8 rounded-lg bg-[#e8b462] flex items-center justify-center">
-          <span className="text-[#3d2b2f] font-bold text-sm">M</span>
-        </div>
+        <img src="/logo.svg" alt="monfolio logo" className="w-8 h-8 object-contain" />
         <span className="text-lg font-bold tracking-tight text-white">
           monfolio
         </span>

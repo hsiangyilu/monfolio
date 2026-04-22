@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 export async function GET() {
   try {
     const snapshots = await prisma.portfolioSnapshot.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "asc" },
     });
     return NextResponse.json(snapshots);
   } catch (error) {

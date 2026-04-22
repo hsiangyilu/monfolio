@@ -41,7 +41,7 @@ export interface CreateHoldingInput {
   notes?: string | null;
 }
 
-export interface UpdateHoldingInput extends Partial<CreateHoldingInput> {}
+export type UpdateHoldingInput = Partial<CreateHoldingInput>;
 
 // ─── Prices ───
 export interface TwStockPrice {

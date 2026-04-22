@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Ignore copied/legacy project folder and its build artifacts:
+    "monfolio/**",
   ]),
 ]);
 
