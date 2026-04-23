@@ -16,6 +16,7 @@ import {
   Cell,
 } from "recharts";
 import { formatTWD, formatPercent, formatCompactNumber } from "@/lib/format";
+import { autoCalcDebt } from "@/lib/debt-calc";
 import {
   TrendingUp,
   TrendingDown,
@@ -171,7 +172,8 @@ export default function ClientHomePage() {
 
     let debt = 0;
     Array.isArray(debts) && debts.forEach((d) => {
-      debt += d.remainingBalance;
+      const calc = autoCalcDebt(d);
+      debt += calc ? calc.remainingBalance : d.remainingBalance;
     });
 
     return { tw_stock, us_stock, crypto, cash, debt };

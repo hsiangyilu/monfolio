@@ -16,6 +16,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import { formatTWD, formatPercent, formatCompactNumber } from "@/lib/format";
+import { autoCalcDebt, calcRemainingInterest } from "@/lib/debt-calc";
 import {
   TrendingUp,
   TrendingDown,
@@ -54,30 +55,6 @@ function costTwd(h: Holding, usdTwd: number): number {
 
 type TimeRange = "1M" | "3M" | "6M" | "ALL";
 type HoldingsSort = "value" | "pnl_pct";
-
-// ── Amortization interest calculator ────────────────────────────────────────
-// Uses month-by-month simulation with interestRate for accuracy.
-// Falls back to simple formula when rate is 0 (flat/interest-free loan).
-function calcRemainingInterest(
-  remainingBalance: number,
-  annualRatePct: number,
-  monthlyPayment: number,
-  remainingTerms: number
-): number {
-  if (annualRatePct <= 0) {
-    return Math.max(0, monthlyPayment * remainingTerms - remainingBalance);
-  }
-  const monthlyRate = annualRatePct / 100 / 12;
-  let totalInterest = 0;
-  let balance = remainingBalance;
-  for (let i = 0; i < remainingTerms && balance > 0.01; i++) {
-    const interest = balance * monthlyRate;
-    const principal = Math.min(monthlyPayment - interest, balance);
-    totalInterest += interest;
-    balance -= principal;
-  }
-  return Math.max(0, totalInterest);
-}
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 function StatCard({
@@ -222,7 +199,10 @@ export default function InsightsPage() {
       cash += h.costCurrency === "USD" ? h.quantity * usdTwd : h.quantity;
     });
     let debt = 0;
-    if (Array.isArray(debts)) debts.forEach((d) => { debt += d.remainingBalance; });
+    if (Array.isArray(debts)) debts.forEach((d) => {
+      const calc = autoCalcDebt(d);
+      debt += calc ? calc.remainingBalance : d.remainingBalance;
+    });
 
     return { tw_stock, us_stock, crypto, cash, debt };
   }, [holdings, twPrices, usPrices, cryptoPrices, usdTwd, debts]);
@@ -415,18 +395,26 @@ export default function InsightsPage() {
   // ── Debt summary — amortization-based interest ────────────────────────────
   const debtSummary = useMemo(() => {
     if (!Array.isArray(debts) || debts.length === 0) return null;
-    const totalRemaining = debts.reduce((s, d) => s + d.remainingBalance, 0);
+    const rows = debts.map((d) => {
+      const calc = autoCalcDebt(d);
+      return {
+        d,
+        remainingBalance: calc ? calc.remainingBalance : d.remainingBalance,
+        remainingTerms: calc ? calc.remainingTerms : d.remainingTerms,
+      };
+    });
+    const totalRemaining = rows.reduce((s, r) => s + r.remainingBalance, 0);
     const totalOriginal = debts.reduce((s, d) => s + d.principalTotal, 0);
     const totalMonthly = debts.reduce((s, d) => s + d.monthlyPayment, 0);
-    const totalInterest = debts.reduce((s, d) => {
+    const totalInterest = rows.reduce((s, r) => {
       return s + calcRemainingInterest(
-        d.remainingBalance,
-        d.interestRate,
-        d.monthlyPayment,
-        d.remainingTerms
+        r.remainingBalance,
+        r.d.interestRate,
+        r.d.monthlyPayment,
+        r.remainingTerms
       );
     }, 0);
-    return { totalRemaining, totalOriginal, totalMonthly, totalInterest };
+    return { totalRemaining, totalOriginal, totalMonthly, totalInterest, rows };
   }, [debts]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -859,10 +847,11 @@ export default function InsightsPage() {
           </div>
 
           <div className="space-y-3">
-            {(debts ?? []).map((d) => {
+            {debtSummary.rows.map((r) => {
+              const d = r.d;
               const paidPct =
                 d.principalTotal > 0
-                  ? ((d.principalTotal - d.remainingBalance) / d.principalTotal) * 100
+                  ? ((d.principalTotal - r.remainingBalance) / d.principalTotal) * 100
                   : 0;
               return (
                 <div key={d.id}>
@@ -871,7 +860,7 @@ export default function InsightsPage() {
                       {d.name}
                     </span>
                     <span className="text-xs text-gray-400 tabular-nums">
-                      {formatTWD(d.remainingBalance)} 剩餘 · {d.interestRate.toFixed(2)}%
+                      {formatTWD(r.remainingBalance)} 剩餘 · {(d.interestRate * 100).toFixed(2)}%
                     </span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
@@ -884,7 +873,7 @@ export default function InsightsPage() {
                     />
                   </div>
                   <p className="text-[11px] text-gray-400 mt-0.5">
-                    已還 {paidPct.toFixed(1)}% · 剩餘 {d.remainingTerms} 期
+                    已還 {paidPct.toFixed(1)}% · 剩餘 {r.remainingTerms} 期
                   </p>
                 </div>
               );

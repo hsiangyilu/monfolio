@@ -1,4 +1,30 @@
 /**
+ * Calculate remaining interest via month-by-month amortization simulation.
+ * annualRateDecimal: DB-native decimal (e.g. 0.0238 for 2.38%).
+ * Falls back to simple formula when rate is 0.
+ */
+export function calcRemainingInterest(
+  remainingBalance: number,
+  annualRateDecimal: number,
+  monthlyPayment: number,
+  remainingTerms: number
+): number {
+  if (annualRateDecimal <= 0) {
+    return Math.max(0, monthlyPayment * remainingTerms - remainingBalance);
+  }
+  const monthlyRate = annualRateDecimal / 12;
+  let totalInterest = 0;
+  let balance = remainingBalance;
+  for (let i = 0; i < remainingTerms && balance > 0.01; i++) {
+    const interest = balance * monthlyRate;
+    const principal = Math.min(monthlyPayment - interest, balance);
+    totalInterest += interest;
+    balance -= principal;
+  }
+  return Math.max(0, totalInterest);
+}
+
+/**
  * Calculate how many payments have been made since the loan start date,
  * based on a fixed day-of-month payment schedule.
  *
@@ -56,6 +82,7 @@ export function autoCalcDebt(debt: {
   monthlyPayment: number;
   paymentDay: number | null;
   startDate: string | null;
+  totalTerms?: number;
 }): AutoCalcResult | null {
   if (!debt.paymentDay || !debt.startDate) return null;
 
@@ -63,11 +90,20 @@ export function autoCalcDebt(debt: {
   const startDate = new Date(debt.startDate);
   if (isNaN(startDate.getTime())) return null;
 
-  const paymentsMade = calcPaymentsMade(startDate, debt.paymentDay, today);
-  const totalPaid = paymentsMade * debt.monthlyPayment;
-  const remainingBalance = Math.max(0, debt.principalTotal - totalPaid);
+  const rawPaymentsMade = calcPaymentsMade(startDate, debt.paymentDay, today);
+  // Clamp paymentsMade to totalTerms so we don't show "已繳 40 / 36 期"
+  // and so remainingBalance math doesn't drift past zero.
+  const paymentsMade =
+    debt.totalTerms && debt.totalTerms > 0
+      ? Math.min(rawPaymentsMade, debt.totalTerms)
+      : rawPaymentsMade;
   const remainingTerms =
-    debt.monthlyPayment > 0 ? Math.ceil(remainingBalance / debt.monthlyPayment) : 0;
+    debt.totalTerms && debt.totalTerms > 0
+      ? Math.max(0, debt.totalTerms - paymentsMade)
+      : debt.monthlyPayment > 0
+        ? Math.ceil(Math.max(0, debt.principalTotal - paymentsMade * debt.monthlyPayment) / debt.monthlyPayment)
+        : 0;
+  const remainingBalance = Math.max(0, debt.principalTotal - paymentsMade * debt.monthlyPayment);
 
   // Next payment date
   const todayYear = today.getFullYear();

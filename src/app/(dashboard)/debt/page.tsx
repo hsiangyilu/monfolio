@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import useSWR from "swr";
 import SummaryCard from "@/components/cards/summary-card";
 import DebtProgress from "@/components/charts/debt-progress";
@@ -23,6 +23,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 interface DebtForm {
   name: string;
   principalTotal: string;
+  totalTerms: string;
   remainingBalance: string;
   interestRate: string;
   remainingTerms: string;
@@ -34,6 +35,7 @@ interface DebtForm {
 const emptyForm: DebtForm = {
   name: "",
   principalTotal: "",
+  totalTerms: "",
   remainingBalance: "",
   interestRate: "",
   remainingTerms: "",
@@ -48,7 +50,15 @@ export default function DebtPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<DebtForm>(emptyForm);
 
-  const totalDebt = Array.isArray(debts) ? debts.reduce((s, d) => s + d.remainingBalance, 0) : 0;
+  const totalDebt = useMemo(() =>
+    Array.isArray(debts)
+      ? debts.reduce((s, d) => {
+          const calc = autoCalcDebt(d);
+          return s + (calc ? calc.remainingBalance : d.remainingBalance);
+        }, 0)
+      : 0,
+    [debts]
+  );
   const totalMonthly = Array.isArray(debts) ? debts.reduce((s, d) => s + d.monthlyPayment, 0) : 0;
 
   // When paymentDay + startDate are both set, remaining balance/terms are auto-calculated
@@ -65,6 +75,7 @@ export default function DebtPage() {
     setForm({
       name: d.name,
       principalTotal: String(d.principalTotal),
+      totalTerms: d.totalTerms ? String(d.totalTerms) : "",
       remainingBalance: String(d.remainingBalance),
       interestRate: String(d.interestRate * 100),
       remainingTerms: String(d.remainingTerms),
@@ -89,6 +100,7 @@ export default function DebtPage() {
         monthlyPayment: parseFloat(form.monthlyPayment) || 0,
         paymentDay,
         startDate: form.startDate,
+        totalTerms: parseInt(form.totalTerms) || 0,
       });
       if (calc) {
         remainingBalance = calc.remainingBalance;
@@ -102,6 +114,7 @@ export default function DebtPage() {
       principalTotal: parseFloat(form.principalTotal) || 0,
       remainingBalance,
       interestRate: (parseFloat(form.interestRate) || 0) / 100,
+      totalTerms: parseInt(form.totalTerms) || 0,
       remainingTerms,
       monthlyPayment: parseFloat(form.monthlyPayment) || 0,
       paymentDay,
@@ -262,15 +275,29 @@ export default function DebtPage() {
                 />
               </div>
             </div>
-            <div>
-              <label htmlFor="debt-start" className="text-xs text-gray-500">貸款起始日</label>
-              <Input
-                id="debt-start"
-                type="date"
-                value={form.startDate}
-                onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                className="mt-1"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="debt-total-terms" className="text-xs text-gray-500">總期數</label>
+                <Input
+                  id="debt-total-terms"
+                  type="number"
+                  min={1}
+                  value={form.totalTerms}
+                  onChange={(e) => setForm({ ...form, totalTerms: e.target.value })}
+                  placeholder="e.g. 36"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label htmlFor="debt-start" className="text-xs text-gray-500">貸款起始日</label>
+                <Input
+                  id="debt-start"
+                  type="date"
+                  value={form.startDate}
+                  onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
             </div>
 
             {/* Auto-calculated section */}
@@ -281,6 +308,7 @@ export default function DebtPage() {
                   monthlyPayment: parseFloat(form.monthlyPayment) || 0,
                   paymentDay: parseInt(form.paymentDay),
                   startDate: form.startDate,
+                  totalTerms: parseInt(form.totalTerms) || 0,
                 });
                 return preview ? (
                   <div className="rounded-lg border border-[#e8b462]/40 bg-[#e8b462]/6 px-4 py-3">
@@ -289,7 +317,7 @@ export default function DebtPage() {
                       <span className="text-xs font-semibold text-[#e8b462]">自動計算結果</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-                      <div>已繳期數：<span className="font-semibold text-gray-900">{preview.paymentsMade} 期</span></div>
+                      <div>已繳期數：<span className="font-semibold text-gray-900">{preview.paymentsMade}{form.totalTerms ? ` / ${form.totalTerms}` : ""} 期</span></div>
                       <div>剩餘期數：<span className="font-semibold text-gray-900">{preview.remainingTerms} 期</span></div>
                       <div className="col-span-2">剩餘金額：<span className="font-semibold text-gray-900">{formatTWD(preview.remainingBalance)}</span></div>
                     </div>
