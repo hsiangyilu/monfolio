@@ -28,6 +28,7 @@ model Debt {
   principalTotal   Float
   remainingBalance Float
   interestRate     Float
+  totalTerms       Int       @default(0)
   remainingTerms   Int
   monthlyPayment   Float
   paymentDay       Int?

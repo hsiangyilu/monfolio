@@ -73,6 +73,7 @@ export interface Debt {
   principalTotal: number;
   remainingBalance: number;
   interestRate: number;
+  totalTerms: number;
   remainingTerms: number;
   monthlyPayment: number;
   paymentDay: number | null;
