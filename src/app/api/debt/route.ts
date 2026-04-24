@@ -32,6 +32,21 @@ export async function PUT(request: NextRequest) {
       startDate,
     } = body;
 
+    // interestRate must be stored as a decimal (e.g. 0.0238 for 2.38%).
+    // Reject values > 1 to prevent accidentally storing percent (e.g. 2.38).
+    if (interestRate != null && interestRate > 1) {
+      return NextResponse.json(
+        { error: "interestRate must be a decimal (e.g. 0.0238 for 2.38%), not a percentage" },
+        { status: 400 }
+      );
+    }
+    if (totalTerms != null && (totalTerms < 0 || !Number.isInteger(totalTerms))) {
+      return NextResponse.json(
+        { error: "totalTerms must be a non-negative integer" },
+        { status: 400 }
+      );
+    }
+
     if (!id) {
       // Create new debt if no ID provided
       if (!name || principalTotal == null || remainingBalance == null) {

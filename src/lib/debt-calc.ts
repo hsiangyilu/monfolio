@@ -17,7 +17,8 @@ export function calcRemainingInterest(
   let balance = remainingBalance;
   for (let i = 0; i < remainingTerms && balance > 0.01; i++) {
     const interest = balance * monthlyRate;
-    const principal = Math.min(monthlyPayment - interest, balance);
+    // Clamp principal ≥ 0: if payment doesn't cover interest, balance doesn't decrease.
+    const principal = Math.min(Math.max(0, monthlyPayment - interest), balance);
     totalInterest += interest;
     balance -= principal;
   }

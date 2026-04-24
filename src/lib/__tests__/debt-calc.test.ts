@@ -41,6 +41,16 @@ describe("calcRemainingInterest", () => {
     const withZero = calcRemainingInterest(10000, 0, 1000, 10);
     expect(withNegative).toBe(withZero);
   });
+
+  it("payment smaller than monthly interest: returns finite interest (no runaway)", () => {
+    // High rate (24% annual = 2%/month), small payment: monthly interest = 200,
+    // payment = 100 → principal contribution = 0, balance stays flat.
+    // Result must be a finite positive number, not Infinity or a huge runaway value.
+    const result = calcRemainingInterest(10000, 0.24, 100, 12);
+    expect(result).toBeGreaterThan(0);
+    expect(result).toBeLessThan(1_000_000);
+    expect(Number.isFinite(result)).toBe(true);
+  });
 });
 
 // ── calcPaymentsMade ─────────────────────────────────────────────────────────
