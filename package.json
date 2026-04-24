@@ -38,6 +38,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@next/swc-wasm-nodejs": "16.1.7",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

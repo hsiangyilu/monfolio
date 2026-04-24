@@ -9,7 +9,7 @@ export function MobileNav() {
   const pathname = usePathname();
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-gray-200 bg-white">
-      <div className="flex items-center justify-around px-2 py-2 pb-[env(safe-area-inset-bottom,8px)]">
+      <div className="flex items-center justify-around px-2 py-2 pb-3 [padding-bottom:calc(env(safe-area-inset-bottom)+8px)]">
         {mobileNavItems.map((item) => {
           const Icon = item.icon;
           const isActive =

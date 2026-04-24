@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { fetchFxRate } from "@/lib/api/fx";
 
 export async function GET() {
+  const session = await auth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const rate = await fetchFxRate();
     return NextResponse.json(rate);

@@ -335,7 +335,7 @@ export default function OverviewUpload({
 
       {/* Multi-category preview dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="bg-white border-gray-200 sm:max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="bg-white border-gray-200 sm:max-w-3xl max-h-[80vh] overflow-y-auto overscroll-y-contain">
           <DialogHeader>
             <DialogTitle>綜合匯入確認</DialogTitle>
             <DialogDescription>
@@ -371,7 +371,7 @@ export default function OverviewUpload({
               未找到任何持股資料
             </p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overscroll-x-contain touch-pan-x">
               <Table>
                 <TableHeader>
                   <TableRow className="border-gray-100 hover:bg-transparent">

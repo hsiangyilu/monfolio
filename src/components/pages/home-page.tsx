@@ -30,6 +30,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { ChartErrorBoundary } from "@/components/charts/chart-error-boundary";
 import OverviewUpload from "@/components/ocr/overview-upload";
 import type {
   Holding,
@@ -470,31 +471,37 @@ export default function ClientHomePage() {
             </h3>
             <div className="flex items-center gap-4">
               <div className="relative h-28 w-28 shrink-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={
-                        allocationData.length > 0
+                <ChartErrorBoundary
+                  title="配比圖表暫時無法顯示"
+                  description="資料異常時會先改顯示這個 fallback，避免整個首頁圖表區塊白掉。"
+                  compact
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={
+                          allocationData.length > 0
+                            ? allocationData
+                            : [{ name: "empty", value: 1, color: "#e5e7eb" }]
+                        }
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={30}
+                        outerRadius={48}
+                        paddingAngle={3}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        {(allocationData.length > 0
                           ? allocationData
                           : [{ name: "empty", value: 1, color: "#e5e7eb" }]
-                      }
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={30}
-                      outerRadius={48}
-                      paddingAngle={3}
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {(allocationData.length > 0
-                        ? allocationData
-                        : [{ name: "empty", value: 1, color: "#e5e7eb" }]
-                      ).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+                        ).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartErrorBoundary>
               </div>
               <div className="flex-1 space-y-1.5">
                 {allocationData.map((item) => {
@@ -564,68 +571,73 @@ export default function ClientHomePage() {
                 </p>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%" minHeight={240}>
-                <AreaChart
-                  data={chartData}
-                  margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient
-                      id="homeNetWorthGrad"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="0%"
-                        stopColor="#e8b462"
-                        stopOpacity={0.2}
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor="#e8b462"
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#f0f0f0"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fill: "#9ca3af", fontSize: 11 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fill: "#9ca3af", fontSize: 11 }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(v: number) =>
-                      formatCompactNumber(v)
-                    }
-                    width={72}
-                  />
-                  <Tooltip content={<ChartTooltip />} />
-                  <Area
-                    type="monotone"
-                    dataKey="value"
-                    stroke="#e8b462"
-                    strokeWidth={2.5}
-                    fill="url(#homeNetWorthGrad)"
-                    dot={false}
-                    activeDot={{
-                      r: 5,
-                      fill: "#e8b462",
-                      stroke: "#ffffff",
-                      strokeWidth: 2,
-                    }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              <ChartErrorBoundary
+                title="總資產走勢圖暫時無法顯示"
+                description="如果歷史資料格式不完整，這裡會先退回安全提示，不會讓整個區塊壞掉。"
+              >
+                <ResponsiveContainer width="100%" height="100%" minHeight={240}>
+                  <AreaChart
+                    data={chartData}
+                    margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient
+                        id="homeNetWorthGrad"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor="#e8b462"
+                          stopOpacity={0.2}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor="#e8b462"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#f0f0f0"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: "#9ca3af", fontSize: 11 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fill: "#9ca3af", fontSize: 11 }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(v: number) =>
+                        formatCompactNumber(v)
+                      }
+                      width={72}
+                    />
+                    <Tooltip content={<ChartTooltip />} />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#e8b462"
+                      strokeWidth={2.5}
+                      fill="url(#homeNetWorthGrad)"
+                      dot={false}
+                      activeDot={{
+                        r: 5,
+                        fill: "#e8b462",
+                        stroke: "#ffffff",
+                        strokeWidth: 2,
+                      }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </ChartErrorBoundary>
             )}
             </div>
           </div>
