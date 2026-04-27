@@ -84,29 +84,85 @@ const CATEGORY_META = [
   },
 ];
 
+const MASK = "••••••";
+
 function ChartTooltip({
   active,
   payload,
   label,
+  masked = false,
 }: {
   active?: boolean;
-  payload?: Array<{ value: number }>;
+  payload?: Array<{ value: number; dataKey?: string | number; name?: string; color?: string }>;
   label?: string;
+  masked?: boolean;
 }) {
   if (!active || !payload?.length) return null;
+  const actual = payload.find((p) => p.dataKey === "value");
+  const constFx = payload.find((p) => p.dataKey === "valueConstFx");
+  const fxImpact =
+    actual && constFx ? actual.value - constFx.value : null;
+  const fmt = (v: number) => (masked ? `NT$ ${MASK}` : formatTWD(v));
+  const fmtSigned = (v: number) =>
+    masked ? `NT$ ${MASK}` : `${v >= 0 ? "+" : ""}${formatTWD(v)}`;
   return (
-    <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-lg">
-      <p className="mb-1 text-xs text-gray-400">
+    <div
+      className="rounded-lg border border-[color:var(--border)] bg-[color:var(--card)] px-4 py-3 space-y-1.5"
+      style={{ boxShadow: "0 8px 24px -8px rgba(61, 43, 47, 0.18)" }}
+    >
+      <p className="text-[11px] font-medium tracking-wide text-[color:var(--muted-foreground)]/80">
         {label}
       </p>
-      <p className="text-sm font-bold text-gray-900">
-        {formatTWD(payload[0].value)}
-      </p>
+      {actual && (
+        <div className="flex items-center gap-4">
+          <span className="inline-flex items-center gap-2 text-xs text-[color:var(--muted-foreground)]">
+            <span className="h-2 w-2 rounded-full bg-[color:var(--primary)]" />
+            實際淨值
+          </span>
+          <span className="ml-auto text-sm font-bold text-[color:var(--foreground)] tabular-nums">
+            {fmt(actual.value)}
+          </span>
+        </div>
+      )}
+      {constFx && (
+        <div className="flex items-center gap-4">
+          <span className="inline-flex items-center gap-2 text-xs text-[color:var(--muted-foreground)]">
+            <svg width="12" height="2" className="overflow-visible" aria-hidden>
+              <line
+                x1="0"
+                y1="1"
+                x2="12"
+                y2="1"
+                stroke="#94a3b8"
+                strokeWidth="1.5"
+                strokeDasharray="3 3"
+              />
+            </svg>
+            排除匯率影響
+          </span>
+          <span className="ml-auto text-sm font-semibold text-[color:var(--foreground)]/85 tabular-nums">
+            {fmt(constFx.value)}
+          </span>
+        </div>
+      )}
+      {fxImpact != null && Math.abs(fxImpact) >= 1 && (
+        <div className="pt-1.5 mt-1 border-t border-[color:var(--border)]/60 flex items-center gap-4">
+          <span className="text-xs text-[color:var(--muted-foreground)]/80">
+            匯率影響
+          </span>
+          <span
+            className="ml-auto text-xs font-semibold tabular-nums"
+            style={{
+              color: fxImpact >= 0 ? "var(--color-gain)" : "var(--color-loss)",
+            }}
+          >
+            {fmtSigned(fxImpact)}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
-
-const MASK = "••••••";
 
 export default function ClientHomePage() {
   const [masked, setMasked] = useState(false);
@@ -187,23 +243,42 @@ export default function ClientHomePage() {
     categoryValues.cash -
     categoryValues.debt;
 
-  const totalUnrealizedPnl = useMemo(() => {
-    if (!holdings) return 0;
-    let pnl = 0;
+  const categoryPnl = useMemo(() => {
+    const result = {
+      tw_stock: { pnl: 0, cost: 0 },
+      us_stock: { pnl: 0, cost: 0 },
+      crypto: { pnl: 0, cost: 0 },
+    };
+    if (!holdings) return result;
+
     holdings["tw_stock"]?.forEach((h: Holding) => {
+      if (h.costBasis == null) return;
       const price = twPrices?.[h.symbol]?.price ?? 0;
-      pnl += h.quantity * price - (h.costBasis ?? 0);
+      if (price === 0) return;
+      result.tw_stock.pnl += h.quantity * price - h.costBasis;
+      result.tw_stock.cost += h.costBasis;
     });
     holdings["us_stock"]?.forEach((h: Holding) => {
+      if (h.costBasis == null) return;
       const price = usPrices?.[h.symbol]?.price ?? 0;
-      pnl += h.quantity * price * usdTwd - (h.costBasis ?? 0);
+      if (price === 0) return;
+      result.us_stock.pnl += h.quantity * price * usdTwd - h.costBasis;
+      result.us_stock.cost += h.costBasis;
     });
     holdings["crypto"]?.forEach((h: Holding) => {
+      if (h.costBasis == null) return;
       const price = cryptoPrices?.[h.symbol]?.price ?? 0;
-      pnl += h.quantity * price * usdTwd - (h.costBasis ?? 0);
+      if (price === 0) return;
+      result.crypto.pnl += h.quantity * price * usdTwd - h.costBasis;
+      result.crypto.cost += h.costBasis;
     });
-    return pnl;
+    return result;
   }, [holdings, twPrices, usPrices, cryptoPrices, usdTwd]);
+
+  const totalUnrealizedPnl =
+    categoryPnl.tw_stock.pnl +
+    categoryPnl.us_stock.pnl +
+    categoryPnl.crypto.pnl;
 
   const todayChange = useMemo(() => {
     if (!holdings) return 0;
@@ -225,14 +300,25 @@ export default function ClientHomePage() {
 
   const chartData = useMemo(() => {
     if (!snapshots) return [];
-    return snapshots.map((s) => ({
-      date: new Date(s.createdAt).toLocaleDateString("zh-TW", {
-        month: "short",
-        day: "numeric",
-      }),
-      value: s.totalNetWorth,
-    }));
-  }, [snapshots]);
+    return snapshots.map((s) => {
+      // Constant-FX baseline: re-price historical USD-denominated assets
+      // (us stocks + crypto) at today's FX rate. The gap vs. actual = FX impact.
+      const fxRatio =
+        s.fxRateUsdTwd > 0 ? usdTwd / s.fxRateUsdTwd : 1;
+      const usdAssetsConstFx =
+        (s.usStockValue + s.cryptoValue) * fxRatio;
+      const valueConstFx =
+        s.twStockValue + s.cashValue + usdAssetsConstFx - s.debtValue;
+      return {
+        date: new Date(s.createdAt).toLocaleDateString("zh-TW", {
+          month: "short",
+          day: "numeric",
+        }),
+        value: s.totalNetWorth,
+        valueConstFx: Math.round(valueConstFx),
+      };
+    });
+  }, [snapshots, usdTwd]);
 
   const allocationData = useMemo(() => {
     return [
@@ -399,6 +485,14 @@ export default function ClientHomePage() {
                 ? (value / totalNetWorth) * 100
                 : 0;
             const target = targetMap.get(cat.label);
+            const pnlInfo =
+              cat.key === "tw_stock" || cat.key === "us_stock" || cat.key === "crypto"
+                ? categoryPnl[cat.key]
+                : null;
+            const pnlPct =
+              pnlInfo && pnlInfo.cost > 0
+                ? (pnlInfo.pnl / pnlInfo.cost) * 100
+                : null;
 
             return (
               <Link
@@ -445,6 +539,27 @@ export default function ClientHomePage() {
                     <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" />
                   </div>
                 </div>
+                {pnlInfo && pnlInfo.cost > 0 && !masked && (
+                  <div
+                    className="mt-2 flex items-center justify-end gap-1.5 text-[11px] tabular-nums"
+                    style={{
+                      color:
+                        pnlInfo.pnl >= 0
+                          ? "var(--color-gain)"
+                          : "var(--color-loss)",
+                    }}
+                  >
+                    <span>
+                      {pnlInfo.pnl >= 0 ? "+" : ""}
+                      {formatTWD(pnlInfo.pnl)}
+                    </span>
+                    {pnlPct != null && (
+                      <span className="font-medium opacity-80">
+                        {formatPercent(pnlPct)}
+                      </span>
+                    )}
+                  </div>
+                )}
                 {cat.key !== "debt" && totalNetWorth > 0 && (
                   <div className="mt-3 h-1 w-full rounded-full bg-gray-100 overflow-hidden">
                     <div
@@ -535,7 +650,7 @@ export default function ClientHomePage() {
 
           {/* Net Worth Chart */}
           <div className="card-premium rounded-xl p-6 flex flex-col flex-1">
-            <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-semibold text-gray-900">
                 總資產走勢
               </h2>
@@ -558,6 +673,33 @@ export default function ClientHomePage() {
                 )}
               </div>
             </div>
+
+            {chartData.length > 0 && (
+              <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-[color:var(--muted-foreground)]">
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-[3px] w-4 rounded-full bg-[color:var(--primary)]" />
+                  實際淨值
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <svg width="16" height="2" className="overflow-visible" aria-hidden>
+                    <line
+                      x1="0"
+                      y1="1"
+                      x2="16"
+                      y2="1"
+                      stroke="#94a3b8"
+                      strokeWidth="1.5"
+                      strokeDasharray="4 4"
+                    />
+                  </svg>
+                  排除匯率影響
+                </span>
+                <span className="text-[color:var(--border)]">·</span>
+                <span className="text-[color:var(--muted-foreground)]/70">
+                  差額代表 USD 資產的匯率影響
+                </span>
+              </div>
+            )}
 
             <div className="flex-1 min-h-[240px]">
             {chartData.length === 0 ? (
@@ -620,7 +762,23 @@ export default function ClientHomePage() {
                       }
                       width={72}
                     />
-                    <Tooltip content={<ChartTooltip />} />
+                    <Tooltip content={<ChartTooltip masked={masked} />} />
+                    <Area
+                      type="monotone"
+                      dataKey="valueConstFx"
+                      stroke="#94a3b8"
+                      strokeWidth={1.5}
+                      strokeDasharray="4 4"
+                      fill="none"
+                      dot={false}
+                      isAnimationActive={false}
+                      activeDot={{
+                        r: 3.5,
+                        fill: "#94a3b8",
+                        stroke: "var(--card)",
+                        strokeWidth: 2,
+                      }}
+                    />
                     <Area
                       type="monotone"
                       dataKey="value"

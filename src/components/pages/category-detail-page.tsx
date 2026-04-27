@@ -11,7 +11,7 @@ import ScreenshotUpload, {
 } from "@/components/ocr/screenshot-upload";
 import OcrPreview from "@/components/ocr/ocr-preview";
 import { formatTWD, formatPercent } from "@/lib/format";
-import { TrendingUp, DollarSign } from "lucide-react";
+import { TrendingUp, DollarSign, Scale } from "lucide-react";
 import type {
   Holding,
   GroupedHoldings,
@@ -119,6 +119,20 @@ export default function CategoryDetailPage({
     }, 0);
   }, [categoryHoldings, getChange, needsFx, usdTwd]);
 
+  const { totalPnl, totalCostTwd } = useMemo(() => {
+    const fxMultiplier = needsFx ? usdTwd : 1;
+    let pnl = 0;
+    let cost = 0;
+    for (const row of holdingRows) {
+      if (row.costBasis == null || row.currentPrice == null) continue;
+      pnl += row.unrealizedPnl;
+      cost += row.costBasis * fxMultiplier;
+    }
+    return { totalPnl: pnl, totalCostTwd: cost };
+  }, [holdingRows, needsFx, usdTwd]);
+
+  const pnlPct = totalCostTwd > 0 ? (totalPnl / totalCostTwd) * 100 : 0;
+
   const changePct =
     totalValue > 0 ? (totalChange / (totalValue - totalChange)) * 100 : 0;
 
@@ -194,7 +208,7 @@ export default function CategoryDetailPage({
         {title}
       </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <SummaryCard
           title={`${title} 總市值`}
           value={formatTWD(totalValue)}
@@ -206,6 +220,13 @@ export default function CategoryDetailPage({
           change={formatPercent(changePct)}
           changeType={totalChange >= 0 ? "positive" : "negative"}
           icon={<TrendingUp className="w-5 h-5" />}
+        />
+        <SummaryCard
+          title="未實現損益"
+          value={totalCostTwd > 0 ? formatTWD(totalPnl) : "—"}
+          change={totalCostTwd > 0 ? formatPercent(pnlPct) : undefined}
+          changeType={totalPnl >= 0 ? "positive" : "negative"}
+          icon={<Scale className="w-5 h-5" />}
         />
       </div>
 
