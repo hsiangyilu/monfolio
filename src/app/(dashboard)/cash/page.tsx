@@ -22,6 +22,8 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { formatTWD } from "@/lib/format";
+import { api, ApiError } from "@/lib/api-client";
+import { toast } from "sonner";
 import { Wallet, Plus, Pencil, Trash2 } from "lucide-react";
 import type { Holding, GroupedHoldings, FxRateData } from "@/types/index";
 
@@ -59,20 +61,24 @@ export default function CashPage() {
 
   const handleAdd = async () => {
     if (!form.quantity) return;
-    await fetch("/api/holdings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        category: "cash",
-        symbol: form.symbol || form.currency,
-        name: form.name || `${form.currency} 現金`,
-        quantity: parseFloat(form.quantity),
-        costCurrency: form.currency,
-      }),
-    });
-    mutate();
-    resetForm();
-    setAddOpen(false);
+    try {
+      await api("/api/holdings", {
+        method: "POST",
+        json: {
+          category: "cash",
+          symbol: form.symbol || form.currency,
+          name: form.name || `${form.currency} 現金`,
+          quantity: parseFloat(form.quantity),
+          costCurrency: form.currency,
+        },
+      });
+      mutate();
+      resetForm();
+      setAddOpen(false);
+      toast.success("現金帳戶已新增");
+    } catch (e) {
+      toast.error(`新增失敗: ${e instanceof ApiError ? e.message : "未知錯誤"}`);
+    }
   };
 
   const openEdit = (h: Holding) => {
@@ -88,25 +94,34 @@ export default function CashPage() {
 
   const handleEdit = async () => {
     if (!editingId || !form.quantity) return;
-    await fetch(`/api/holdings/${editingId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: form.name,
-        symbol: form.symbol,
-        quantity: parseFloat(form.quantity),
-        costCurrency: form.currency,
-      }),
-    });
-    mutate();
-    resetForm();
-    setEditingId(null);
-    setEditOpen(false);
+    try {
+      await api(`/api/holdings/${editingId}`, {
+        method: "PUT",
+        json: {
+          name: form.name,
+          symbol: form.symbol,
+          quantity: parseFloat(form.quantity),
+          costCurrency: form.currency,
+        },
+      });
+      mutate();
+      resetForm();
+      setEditingId(null);
+      setEditOpen(false);
+      toast.success("已更新");
+    } catch (e) {
+      toast.error(`更新失敗: ${e instanceof ApiError ? e.message : "未知錯誤"}`);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/holdings/${id}`, { method: "DELETE" });
-    mutate();
+    try {
+      await api(`/api/holdings/${id}`, { method: "DELETE" });
+      mutate();
+      toast.success("已刪除");
+    } catch (e) {
+      toast.error(`刪除失敗: ${e instanceof ApiError ? e.message : "未知錯誤"}`);
+    }
   };
 
   const FormFields = (

@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Providers } from "@/components/providers";
+import { Toaster } from "sonner";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -41,6 +42,13 @@ export default function RootLayout({
             {children}
           </TooltipProvider>
         </Providers>
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          theme="dark"
+          toastOptions={{ style: { fontFamily: "var(--font-geist-sans)" } }}
+        />
       </body>
     </html>
   );

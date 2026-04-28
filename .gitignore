@@ -52,4 +52,6 @@ skills-lock.json
 
 # SQLite local DB (use migration in prod)
 dev.db
+dev.db.bak-*
 prisma/dev.db
+prisma/dev.db.bak-*

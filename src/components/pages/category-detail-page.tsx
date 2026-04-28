@@ -11,6 +11,8 @@ import ScreenshotUpload, {
 } from "@/components/ocr/screenshot-upload";
 import OcrPreview from "@/components/ocr/ocr-preview";
 import { formatTWD, formatPercent } from "@/lib/format";
+import { api, ApiError } from "@/lib/api-client";
+import { toast } from "sonner";
 import { TrendingUp, DollarSign, Scale } from "lucide-react";
 import type {
   Holding,
@@ -152,12 +154,53 @@ export default function CategoryDetailPage({
     quantity: number;
     costBasis: number | null;
   }) => {
-    await fetch("/api/holdings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...data, category }),
-    });
-    await mutateHoldings(undefined, { revalidate: true });
+    // Temp optimistic row — real id arrives after revalidation
+    const tempId = `temp-${crypto.randomUUID()}`;
+    const optimisticHolding: Holding = {
+      id: tempId,
+      category,
+      symbol: data.symbol,
+      name: data.name,
+      quantity: data.quantity,
+      costBasis: data.costBasis,
+      costCurrency: "TWD",
+      notes: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      await mutateHoldings(
+        async (current) => {
+          await api<Holding>("/api/holdings", {
+            method: "POST",
+            json: { ...data, category },
+          });
+          return current; // let revalidate pick up the real row with server id
+        },
+        {
+          optimisticData: (current) => {
+            const base: GroupedHoldings = current ?? {
+              tw_stock: [],
+              us_stock: [],
+              crypto: [],
+              cash: [],
+            };
+            return {
+              ...base,
+              [category]: [...(base[category] ?? []), optimisticHolding],
+            };
+          },
+          rollbackOnError: true,
+          revalidate: true,
+          populateCache: false,
+        }
+      );
+      toast.success(`已新增 ${data.symbol}`);
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : "新增失敗";
+      toast.error(`新增失敗: ${msg}`);
+    }
   };
 
   const handleEdit = async (
@@ -169,17 +212,73 @@ export default function CategoryDetailPage({
       costBasis: number | null;
     }
   ) => {
-    await fetch(`/api/holdings/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    await mutateHoldings(undefined, { revalidate: true });
+    try {
+      await mutateHoldings(
+        async (current) => {
+          await api<Holding>(`/api/holdings/${id}`, {
+            method: "PUT",
+            json: data,
+          });
+          return current;
+        },
+        {
+          optimisticData: (current) => {
+            const base: GroupedHoldings = current ?? {
+              tw_stock: [],
+              us_stock: [],
+              crypto: [],
+              cash: [],
+            };
+            return {
+              ...base,
+              [category]: (base[category] ?? []).map((h) =>
+                h.id === id ? { ...h, ...data } : h
+              ),
+            };
+          },
+          rollbackOnError: true,
+          revalidate: true,
+          populateCache: false,
+        }
+      );
+      toast.success(`已更新 ${data.symbol}`);
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : "更新失敗";
+      toast.error(`更新失敗,已還原: ${msg}`);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/holdings/${id}`, { method: "DELETE" });
-    await mutateHoldings(undefined, { revalidate: true });
+    const removed = categoryHoldings.find((h) => h.id === id);
+    try {
+      await mutateHoldings(
+        async (current) => {
+          await api<void>(`/api/holdings/${id}`, { method: "DELETE" });
+          return current;
+        },
+        {
+          optimisticData: (current) => {
+            const base: GroupedHoldings = current ?? {
+              tw_stock: [],
+              us_stock: [],
+              crypto: [],
+              cash: [],
+            };
+            return {
+              ...base,
+              [category]: (base[category] ?? []).filter((h) => h.id !== id),
+            };
+          },
+          rollbackOnError: true,
+          revalidate: true,
+          populateCache: false,
+        }
+      );
+      toast.success(removed ? `已刪除 ${removed.symbol}` : "已刪除");
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : "刪除失敗";
+      toast.error(`刪除失敗,已還原: ${msg}`);
+    }
   };
 
   const isLoading = !holdings;

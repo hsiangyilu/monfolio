@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { formatTWD } from "@/lib/format";
 import { autoCalcDebt } from "@/lib/debt-calc";
+import { api, ApiError } from "@/lib/api-client";
+import { toast } from "sonner";
 import { CreditCard, Plus, Zap } from "lucide-react";
 import type { Debt } from "@/types/index";
 
@@ -120,20 +122,26 @@ export default function DebtPage() {
       paymentDay,
       startDate: form.startDate || null,
     };
-    await fetch("/api/debt", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    mutate();
-    setForm(emptyForm);
-    setEditingId(null);
-    setDialogOpen(false);
+    try {
+      await api("/api/debt", { method: "PUT", json: body });
+      mutate();
+      setForm(emptyForm);
+      setEditingId(null);
+      setDialogOpen(false);
+      toast.success(editingId ? "已更新負債" : "已新增負債");
+    } catch (e) {
+      toast.error(`儲存失敗: ${e instanceof ApiError ? e.message : "未知錯誤"}`);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/debt/${id}`, { method: "DELETE" });
-    mutate();
+    try {
+      await api(`/api/debt/${id}`, { method: "DELETE" });
+      mutate();
+      toast.success("已刪除");
+    } catch (e) {
+      toast.error(`刪除失敗: ${e instanceof ApiError ? e.message : "未知錯誤"}`);
+    }
   };
 
   if (!Array.isArray(debts)) {

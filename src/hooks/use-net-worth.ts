@@ -51,8 +51,7 @@ export function useNetWorth(): NetWorthData & { isLoading: boolean } {
       const marketValue =
         currentPrice != null ? currentPrice * holding.quantity : null;
       const marketValueTwd = marketValue;
-      const costTotal =
-        holding.costBasis != null ? holding.costBasis * holding.quantity : null;
+      const costTotal = holding.costBasis ?? null;
       const profitLoss =
         marketValue != null && costTotal != null
           ? marketValue - costTotal
@@ -87,8 +86,7 @@ export function useNetWorth(): NetWorthData & { isLoading: boolean } {
         currentPrice != null ? currentPrice * holding.quantity : null;
       const marketValueTwd =
         marketValue != null ? marketValue * usdTwd : null;
-      const costTotal =
-        holding.costBasis != null ? holding.costBasis * holding.quantity : null;
+      const costTotal = holding.costBasis ?? null;
       const profitLoss =
         marketValue != null && costTotal != null
           ? marketValue - costTotal
@@ -123,8 +121,7 @@ export function useNetWorth(): NetWorthData & { isLoading: boolean } {
         currentPrice != null ? currentPrice * holding.quantity : null;
       const marketValueTwd =
         marketValue != null ? marketValue * usdTwd : null;
-      const costTotal =
-        holding.costBasis != null ? holding.costBasis * holding.quantity : null;
+      const costTotal = holding.costBasis ?? null;
       const profitLoss =
         marketValue != null && costTotal != null
           ? marketValue - costTotal
