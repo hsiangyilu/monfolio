@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
 import { parseSpreadsheet } from "@/lib/ocr/spreadsheet-parser";
 import { analyzeWithGemini } from "@/lib/ocr/gemini";
 import { analyzeWithClaude } from "@/lib/ocr/claude-vision";
@@ -23,8 +22,6 @@ function isSpreadsheet(file: File): boolean {
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const formData = await request.formData();
     const file = formData.get("image") as File | null; // keep "image" key for backward compat

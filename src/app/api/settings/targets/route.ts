@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
 
 export async function GET() {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const targets = await prisma.targetAllocation.findMany();
     return NextResponse.json(targets);
@@ -18,8 +15,6 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const { allocations } = await request.json();
 
