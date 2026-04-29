@@ -34,8 +34,7 @@ import type {
   TargetAllocation,
   Debt,
 } from "@/types/index";
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { fetcher } from "@/lib/fetcher";
 
 const CATEGORY_META = [
   { key: "tw_stock" as const, label: "台股", color: "#e8b462" },

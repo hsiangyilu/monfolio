@@ -26,8 +26,7 @@ import { api, ApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 import { Wallet, Plus, Pencil, Trash2 } from "lucide-react";
 import type { Holding, GroupedHoldings, FxRateData } from "@/types/index";
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { fetcher } from "@/lib/fetcher";
 
 export default function CashPage() {
   const { data: holdings, mutate } = useSWR<GroupedHoldings>(

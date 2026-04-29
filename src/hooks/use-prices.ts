@@ -1,7 +1,6 @@
 import useSWR from "swr";
 import type { TwStockPrice, UsStockPrice, CryptoPrice, FxRateData } from "@/types";
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { fetcher } from "@/lib/fetcher";
 
 const PRICE_INTERVAL = 15 * 1000; // 15 seconds – real-time prices
 const FX_INTERVAL = 5 * 60 * 1000; // 5 minutes – FX rate changes slowly

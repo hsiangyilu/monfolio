@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Save, Loader2 } from "lucide-react";
 import type { TargetAllocation } from "@/types/index";
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { fetcher } from "@/lib/fetcher";
 
 interface SettingsData {
   ocrEngine: string;

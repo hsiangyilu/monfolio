@@ -43,8 +43,7 @@ import type {
   TargetAllocation,
   Debt,
 } from "@/types/index";
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { fetcher } from "@/lib/fetcher";
 
 const CATEGORY_META = [
   {
