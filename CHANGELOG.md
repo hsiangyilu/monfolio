@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2026-04-29
+
+### Removed
+- **Google OAuth authentication**: Removed login requirement entirely — the app is now open access. Deleted `next-auth`, the login page, auth middleware, email allowlist, and all API auth guards. Anyone with the URL can use the app.
+
+### Fixed
+- **App crash on load**: The dashboard was crashing with `TypeError: E?.forEach is not a function` because the SWR fetcher silently returned 401 error objects as data. The new `fetcher.ts` throws properly on non-2xx responses.
+- **Test parallelism**: Vitest was running test files in parallel against the same real database, causing flaky failures when `beforeEach` teardown in one file deleted records created by another. Tests now run serially.
+
+### Added
+- `src/lib/fetcher.ts`: Shared SWR fetcher that throws on non-2xx responses with the server's error message and HTTP status attached. Replaces inline `fetch().then(r => r.json())` calls that swallowed errors.
+- Unit tests for `fetcher.ts` (3 tests: happy path, error with JSON body, error with non-JSON body).
+
 ## [0.2.0] - 2026-04-23
 
 ### Added
