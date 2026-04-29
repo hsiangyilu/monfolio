@@ -3,12 +3,7 @@
  *
  * Hard requirement: DATABASE_URL — without it nothing works.
  * Soft requirements: warn but don't crash. The features that depend on these
- * (auth, OCR) check at the call site and surface a usable error.
- *
- * Why this matters: previously this file threw on missing NEXTAUTH_SECRET et al
- * at module load. That blew up *every* route that imported `@/lib/db` —
- * including holdings reads, which don't actually need auth secrets to load.
- * The result was a 500 storm that looked like "data was cleared". It wasn't.
+ * (OCR) check at the call site and surface a usable error.
  */
 
 const isTest = process.env.NODE_ENV === "test";
@@ -22,8 +17,6 @@ if (!isTest && !isBuild) {
   // Soft warnings — features that need these will fail loudly when invoked,
   // not when loading unrelated routes.
   const softRequired = [
-    "NEXTAUTH_SECRET",
-    "NEXTAUTH_URL",
     "GEMINI_API_KEY",
     "ANTHROPIC_API_KEY",
   ];

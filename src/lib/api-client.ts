@@ -51,14 +51,6 @@ export async function api<T = unknown>(
     );
   }
 
-  if (res.status === 401) {
-    // Soft redirect — login flow handles the rest
-    if (typeof window !== "undefined") {
-      window.location.href = "/login";
-    }
-    throw new ApiError("Unauthorized", 401);
-  }
-
   if (!res.ok) {
     let body: unknown = undefined;
     let message = `HTTP ${res.status}`;

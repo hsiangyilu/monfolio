@@ -1,11 +1,6 @@
 import { describe, it, expect, vi } from "vitest"
 import { NextRequest } from "next/server"
 
-// Mock auth to return a valid session for all tests
-vi.mock("@/lib/auth", () => ({
-  auth: vi.fn().mockResolvedValue({ user: { email: "test@example.com" } }),
-}))
-
 // Mock env validation so missing env vars don't throw in tests
 vi.mock("@/lib/env", () => ({}))
 
