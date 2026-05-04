@@ -96,13 +96,16 @@ function PnlTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-lg">
-      <p className="mb-1 text-xs text-gray-400">{label}</p>
+    <div
+      className="rounded-lg border border-[color:var(--border)] bg-[color:var(--card)] px-4 py-3 space-y-1"
+      style={{ boxShadow: "0 8px 24px -8px rgba(61, 43, 47, 0.18)" }}
+    >
+      <p className="text-[11px] font-medium tracking-wide text-[color:var(--muted-foreground)]/80">{label}</p>
       {payload.map((p, i) => (
         <p
           key={i}
           className={`text-sm font-bold tabular-nums ${
-            p.value >= 0 ? "text-[#7bb155]" : "text-[#f44336]"
+            p.value >= 0 ? "text-[color:var(--color-gain)]" : "text-[color:var(--color-loss)]"
           }`}
         >
           {p.value >= 0 ? "+" : ""}
@@ -124,18 +127,23 @@ function HistoryTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-lg min-w-[160px]">
-      <p className="mb-2 text-xs text-gray-400">{label}</p>
+    <div
+      className="rounded-lg border border-[color:var(--border)] bg-[color:var(--card)] px-4 py-3 space-y-1.5"
+      style={{ boxShadow: "0 8px 24px -8px rgba(61, 43, 47, 0.18)" }}
+    >
+      <p className="text-[11px] font-medium tracking-wide text-[color:var(--muted-foreground)]/80">
+        {label}
+      </p>
       {payload.map((p, i) => (
-        <div key={i} className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-1.5">
+        <div key={i} className="flex items-center gap-4">
+          <span className="inline-flex items-center gap-2 text-xs text-[color:var(--muted-foreground)]">
             <span
               className="h-2 w-2 rounded-full shrink-0"
               style={{ backgroundColor: p.color }}
             />
-            <span className="text-xs text-gray-500">{p.name}</span>
-          </div>
-          <span className="text-xs font-semibold text-gray-900 tabular-nums">
+            {p.name}
+          </span>
+          <span className="ml-auto text-sm font-bold text-[color:var(--foreground)] tabular-nums">
             {formatCompactNumber(p.value)}
           </span>
         </div>
@@ -438,7 +446,7 @@ export default function InsightsPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Insights</h1>
+        <h1 className="text-2xl font-bold text-gray-900">數據洞察</h1>
       </div>
 
       {/* ── Key Metrics ── */}
@@ -512,7 +520,7 @@ export default function InsightsPage() {
                   tickFormatter={(v: number) => formatCompactNumber(v)}
                   width={68}
                 />
-                <Tooltip content={<PnlTooltip />} />
+                <Tooltip content={<PnlTooltip />} cursor={{ fill: "#f9fafb" }} />
                 <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
                 <Bar dataKey="pnl" radius={[4, 4, 0, 0]}>
                   {pnlByCategory.map((entry, i) => (
@@ -640,15 +648,15 @@ export default function InsightsPage() {
             </ResponsiveContainer>
           )}
 
-          <div className="mt-4 flex flex-wrap gap-3 border-t border-gray-100 pt-4">
+          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t border-gray-100 pt-4">
             {CATEGORY_META.map((cat) => (
-              <div key={cat.key} className="flex items-center gap-1.5">
+              <span key={cat.key} className="inline-flex items-center gap-2 text-[11px] text-[color:var(--muted-foreground)]">
                 <span
-                  className="h-2 w-2 rounded-full"
+                  className="h-[3px] w-4 rounded-full"
                   style={{ backgroundColor: cat.color }}
                 />
-                <span className="text-xs text-gray-500">{cat.label}</span>
-              </div>
+                {cat.label}
+              </span>
             ))}
           </div>
         </div>
@@ -854,14 +862,9 @@ export default function InsightsPage() {
                   : 0;
               return (
                 <div key={d.id}>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-xs font-medium text-gray-700">
-                      {d.name}
-                    </span>
-                    <span className="text-xs text-gray-400 tabular-nums">
-                      {formatTWD(r.remainingBalance)} 剩餘 · {(d.interestRate * 100).toFixed(2)}%
-                    </span>
-                  </div>
+                  <p className="text-xs font-medium text-gray-700 mb-1">
+                    {d.name}
+                  </p>
                   <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-700"
@@ -871,9 +874,14 @@ export default function InsightsPage() {
                       }}
                     />
                   </div>
-                  <p className="text-[11px] text-gray-400 mt-0.5">
-                    已還 {paidPct.toFixed(1)}% · 剩餘 {r.remainingTerms} 期
-                  </p>
+                  <div className="flex justify-between mt-0.5">
+                    <p className="text-[11px] text-gray-400">
+                      已還 {paidPct.toFixed(1)}% · 剩餘 {r.remainingTerms} 期
+                    </p>
+                    <p className="text-[11px] text-gray-400 tabular-nums">
+                      {formatTWD(r.remainingBalance)} 剩餘 · {(d.interestRate * 100).toFixed(2)}%
+                    </p>
+                  </div>
                 </div>
               );
             })}

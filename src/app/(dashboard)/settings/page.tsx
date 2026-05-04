@@ -134,7 +134,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+      <h1 className="text-2xl font-bold text-gray-900">設定</h1>
 
       <div className="card-premium rounded-2xl p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -248,7 +248,7 @@ export default function SettingsPage() {
             onClick={() => setOcrEngine("gemini")}
             className={`flex-1 rounded-xl border p-4 text-left transition-colors ${
               ocrEngine === "gemini"
-                ? "border-gray-900 bg-gray-50"
+                ? "border-[color:var(--primary)] bg-[color:var(--primary)]/5"
                 : "border-gray-200 hover:border-gray-300"
             }`}
           >
@@ -259,7 +259,7 @@ export default function SettingsPage() {
             onClick={() => setOcrEngine("claude")}
             className={`flex-1 rounded-xl border p-4 text-left transition-colors ${
               ocrEngine === "claude"
-                ? "border-gray-900 bg-gray-50"
+                ? "border-[color:var(--primary)] bg-[color:var(--primary)]/5"
                 : "border-gray-200 hover:border-gray-300"
             }`}
           >
