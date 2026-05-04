@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2] - 2026-05-04
+
+### Changed
+- **Insights page**: PnL tooltip now uses correct Taiwan market color convention — red for gain, green for loss. All gain/loss colors now reference CSS design tokens (`--color-gain`, `--color-loss`) instead of hardcoded hex values.
+- **Insights page**: Tooltip popups (PnL and asset history) match the home page's tooltip style — warm card shadow, muted label, bold values.
+- **Insights page**: Asset history chart legend uses horizontal lines instead of dots, consistent with the Overview chart.
+- **Insights page**: Debt section now shows remaining balance and interest rate below the progress bar, aligned with the repayment percentage.
+- **Insights page**: Page title localized to 數據洞察.
+- **Settings page**: OCR engine selection uses brand amber highlight instead of generic gray.
+- **Settings page**: Page title localized to 設定.
+- **Design system**: `--primary` color token used for interactive highlights; hardcoded `#e8b462` removed from component code.
+- **CLAUDE.md**: Expanded with full architecture guide, database notes, design system tokens, and skill routing table.
+
+### Fixed
+- **Turbopack crash on load**: Removed orphaned `src/app/api/auth/[...nextauth]/route.ts` that referenced a deleted auth module, causing Turbopack to panic on every page load after auth was removed in v0.2.1.
+
 ## [0.2.1] - 2026-04-29
 
 ### Removed
