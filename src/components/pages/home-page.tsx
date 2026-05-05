@@ -261,15 +261,15 @@ export default function ClientHomePage() {
       if (h.costBasis == null) return;
       const price = usPrices?.[h.symbol]?.price ?? 0;
       if (price === 0) return;
-      result.us_stock.pnl += h.quantity * price * usdTwd - h.costBasis;
-      result.us_stock.cost += h.costBasis;
+      result.us_stock.pnl += h.quantity * price * usdTwd - h.costBasis * usdTwd;
+      result.us_stock.cost += h.costBasis * usdTwd;
     });
     holdings["crypto"]?.forEach((h: Holding) => {
       if (h.costBasis == null) return;
       const price = cryptoPrices?.[h.symbol]?.price ?? 0;
       if (price === 0) return;
-      result.crypto.pnl += h.quantity * price * usdTwd - h.costBasis;
-      result.crypto.cost += h.costBasis;
+      result.crypto.pnl += h.quantity * price * usdTwd - h.costBasis * usdTwd;
+      result.crypto.cost += h.costBasis * usdTwd;
     });
     return result;
   }, [holdings, twPrices, usPrices, cryptoPrices, usdTwd]);
