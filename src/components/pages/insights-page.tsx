@@ -98,7 +98,7 @@ function PnlTooltip({
   return (
     <div
       className="rounded-lg border border-[color:var(--border)] bg-[color:var(--card)] px-4 py-3 space-y-1"
-      style={{ boxShadow: "0 8px 24px -8px rgba(61, 43, 47, 0.18)" }}
+      style={{ boxShadow: "var(--shadow-warm-tooltip)" }}
     >
       <p className="text-[11px] font-medium tracking-wide text-[color:var(--muted-foreground)]/80">{label}</p>
       {payload.map((p, i) => (
@@ -129,7 +129,7 @@ function HistoryTooltip({
   return (
     <div
       className="rounded-lg border border-[color:var(--border)] bg-[color:var(--card)] px-4 py-3 space-y-1.5"
-      style={{ boxShadow: "0 8px 24px -8px rgba(61, 43, 47, 0.18)" }}
+      style={{ boxShadow: "var(--shadow-warm-tooltip)" }}
     >
       <p className="text-[11px] font-medium tracking-wide text-[color:var(--muted-foreground)]/80">
         {label}
@@ -520,7 +520,7 @@ export default function InsightsPage() {
                   tickFormatter={(v: number) => formatCompactNumber(v)}
                   width={68}
                 />
-                <Tooltip content={<PnlTooltip />} cursor={{ fill: "#f9fafb" }} />
+                <Tooltip content={<PnlTooltip />} cursor={{ fill: "var(--muted)" }} />
                 <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
                 <Bar dataKey="pnl" radius={[4, 4, 0, 0]}>
                   {pnlByCategory.map((entry, i) => (

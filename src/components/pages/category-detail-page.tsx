@@ -92,9 +92,12 @@ export default function CategoryDetailPage({
   const holdingRows: HoldingRow[] = useMemo(() => {
     return categoryHoldings.map((h: Holding) => {
       const price = getPrice(h.symbol);
+      if (price == null) {
+        return { id: h.id, symbol: h.symbol, name: h.name, quantity: h.quantity, costBasis: h.costBasis, currentPrice: null, totalValueTwd: 0, unrealizedPnl: 0, pnlPercent: 0 };
+      }
       const { totalValueTwd, pnl: unrealizedPnl, pnlPercent } = calcHoldingPnl({
         quantity: h.quantity,
-        priceInNative: price ?? 0,
+        priceInNative: price,
         costBasisInNative: h.costBasis ?? 0,
         usdTwd,
         needsFx,
@@ -107,9 +110,9 @@ export default function CategoryDetailPage({
         quantity: h.quantity,
         costBasis: h.costBasis,
         currentPrice: price,
-        totalValueTwd: price != null ? totalValueTwd : 0,
-        unrealizedPnl: price != null ? unrealizedPnl : 0,
-        pnlPercent: price != null ? pnlPercent : 0,
+        totalValueTwd,
+        unrealizedPnl,
+        pnlPercent,
       };
     });
   }, [categoryHoldings, getPrice, needsFx, usdTwd]);

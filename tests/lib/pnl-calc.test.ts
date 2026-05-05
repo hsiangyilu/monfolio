@@ -112,5 +112,47 @@ describe("calcHoldingPnl", () => {
       expect(result.totalValueTwd).toBe(0);
       expect(result.pnl).toBeCloseTo(-500 * USD_TWD, 0);
     });
+
+    it("returns 0% pnlPercent for negative costBasis (guard prevents divide by negative)", () => {
+      // Negative cost basis should not produce a meaningless positive %
+      const result = calcHoldingPnl({
+        quantity: 10,
+        priceInNative: 100,
+        costBasisInNative: -50,
+        usdTwd: USD_TWD,
+        needsFx: false,
+      });
+      // costTwd = -50, guard: costTwd > 0 is false → pnlPercent = 0
+      expect(result.costTwd).toBe(-50);
+      expect(result.pnlPercent).toBe(0);
+    });
+
+    it("returns 0 for all TWD values when usdTwd is 0 and needsFx is true", () => {
+      // FX rate unavailable (API not yet loaded): values go to 0, not NaN
+      const result = calcHoldingPnl({
+        quantity: 10,
+        priceInNative: 100,
+        costBasisInNative: 500,
+        usdTwd: 0,
+        needsFx: true,
+      });
+      expect(result.totalValueTwd).toBe(0);
+      expect(result.costTwd).toBe(0);
+      expect(result.pnl).toBe(0);
+      expect(result.pnlPercent).toBe(0);
+    });
+
+    it("returns zeros when price is 0 (mimics caller null-guard behaviour)", () => {
+      // Callers pass priceInNative=0 when price is unavailable, then override outputs to 0
+      const result = calcHoldingPnl({
+        quantity: 10,
+        priceInNative: 0,
+        costBasisInNative: 500,
+        usdTwd: USD_TWD,
+        needsFx: false,
+      });
+      expect(result.totalValueTwd).toBe(0);
+      expect(result.pnl).toBe(-500);
+    });
   });
 });
