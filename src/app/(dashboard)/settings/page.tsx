@@ -139,7 +139,7 @@ export default function SettingsPage() {
       <div className="card-premium rounded-2xl p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
           目標資產配置
-        </h3>
+        </h2>
         <p className="text-sm text-gray-500 mb-6">
           設定各類資產的目標比例，總和需為 100%。
         </p>
@@ -238,7 +238,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="card-premium rounded-2xl p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">OCR 辨識引擎</h3>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">OCR 辨識引擎</h2>
         <p className="text-sm text-gray-500 mb-4">
           選擇用於截圖辨識的 AI 引擎。
         </p>
@@ -290,7 +290,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="card-premium rounded-2xl p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">API Keys</h3>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">API Keys</h2>
         <p className="text-sm text-gray-500 mb-4">
           API keys 設定於環境變數 (.env)，此處僅顯示狀態。
         </p>

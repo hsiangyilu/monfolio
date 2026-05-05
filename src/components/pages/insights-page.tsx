@@ -56,6 +56,30 @@ type TimeRange = "1M" | "3M" | "6M" | "ALL";
 type HoldingsSort = "value" | "pnl_pct";
 
 // ── Sub-components ───────────────────────────────────────────────────────────
+function TooltipCard({
+  label,
+  spacing = "space-y-1",
+  children,
+}: {
+  label?: string;
+  spacing?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={`rounded-lg border border-[color:var(--border)] bg-[color:var(--card)] px-4 py-3 ${spacing}`}
+      style={{ boxShadow: "var(--shadow-warm-tooltip)" }}
+    >
+      {label && (
+        <p className="text-[11px] font-medium tracking-wide text-[color:var(--muted-foreground)]/80">
+          {label}
+        </p>
+      )}
+      {children}
+    </div>
+  );
+}
+
 function StatCard({
   label,
   value,
@@ -96,11 +120,7 @@ function PnlTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div
-      className="rounded-lg border border-[color:var(--border)] bg-[color:var(--card)] px-4 py-3 space-y-1"
-      style={{ boxShadow: "var(--shadow-warm-tooltip)" }}
-    >
-      <p className="text-[11px] font-medium tracking-wide text-[color:var(--muted-foreground)]/80">{label}</p>
+    <TooltipCard label={label}>
       {payload.map((p, i) => (
         <p
           key={i}
@@ -112,7 +132,7 @@ function PnlTooltip({
           {formatTWD(p.value)}
         </p>
       ))}
-    </div>
+    </TooltipCard>
   );
 }
 
@@ -127,13 +147,7 @@ function HistoryTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div
-      className="rounded-lg border border-[color:var(--border)] bg-[color:var(--card)] px-4 py-3 space-y-1.5"
-      style={{ boxShadow: "var(--shadow-warm-tooltip)" }}
-    >
-      <p className="text-[11px] font-medium tracking-wide text-[color:var(--muted-foreground)]/80">
-        {label}
-      </p>
+    <TooltipCard label={label} spacing="space-y-1.5">
       {payload.map((p, i) => (
         <div key={i} className="flex items-center gap-4">
           <span className="inline-flex items-center gap-2 text-xs text-[color:var(--muted-foreground)]">
@@ -148,7 +162,7 @@ function HistoryTooltip({
           </span>
         </div>
       ))}
-    </div>
+    </TooltipCard>
   );
 }
 
