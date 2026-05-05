@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import { calcHoldingPnl } from "@/lib/pnl-calc";
 import Link from "next/link";
 import useSWR from "swr";
 import {
@@ -254,22 +255,25 @@ export default function ClientHomePage() {
       if (h.costBasis == null) return;
       const price = twPrices?.[h.symbol]?.price ?? 0;
       if (price === 0) return;
-      result.tw_stock.pnl += h.quantity * price - h.costBasis;
-      result.tw_stock.cost += h.costBasis;
+      const { pnl, costTwd } = calcHoldingPnl({ quantity: h.quantity, priceInNative: price, costBasisInNative: h.costBasis, usdTwd, needsFx: false });
+      result.tw_stock.pnl += pnl;
+      result.tw_stock.cost += costTwd;
     });
     holdings["us_stock"]?.forEach((h: Holding) => {
       if (h.costBasis == null) return;
       const price = usPrices?.[h.symbol]?.price ?? 0;
       if (price === 0) return;
-      result.us_stock.pnl += h.quantity * price * usdTwd - h.costBasis * usdTwd;
-      result.us_stock.cost += h.costBasis * usdTwd;
+      const { pnl, costTwd } = calcHoldingPnl({ quantity: h.quantity, priceInNative: price, costBasisInNative: h.costBasis, usdTwd, needsFx: true });
+      result.us_stock.pnl += pnl;
+      result.us_stock.cost += costTwd;
     });
     holdings["crypto"]?.forEach((h: Holding) => {
       if (h.costBasis == null) return;
       const price = cryptoPrices?.[h.symbol]?.price ?? 0;
       if (price === 0) return;
-      result.crypto.pnl += h.quantity * price * usdTwd - h.costBasis * usdTwd;
-      result.crypto.cost += h.costBasis * usdTwd;
+      const { pnl, costTwd } = calcHoldingPnl({ quantity: h.quantity, priceInNative: price, costBasisInNative: h.costBasis, usdTwd, needsFx: true });
+      result.crypto.pnl += pnl;
+      result.crypto.cost += costTwd;
     });
     return result;
   }, [holdings, twPrices, usPrices, cryptoPrices, usdTwd]);
