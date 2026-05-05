@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { calcHoldingPnl } from "@/lib/pnl-calc";
 import useSWR from "swr";
 import SummaryCard from "@/components/cards/summary-card";
 import HoldingsTable, {
@@ -91,11 +92,16 @@ export default function CategoryDetailPage({
   const holdingRows: HoldingRow[] = useMemo(() => {
     return categoryHoldings.map((h: Holding) => {
       const price = getPrice(h.symbol);
-      const fxMultiplier = needsFx ? usdTwd : 1;
-      const totalValueTwd = price != null ? h.quantity * price * fxMultiplier : 0;
-      const cost = (h.costBasis ?? 0) * fxMultiplier; // convert to TWD same as totalValueTwd
-      const unrealizedPnl = totalValueTwd - cost;
-      const pnlPercent = cost > 0 ? (unrealizedPnl / cost) * 100 : 0;
+      if (price == null) {
+        return { id: h.id, symbol: h.symbol, name: h.name, quantity: h.quantity, costBasis: h.costBasis, currentPrice: null, totalValueTwd: 0, unrealizedPnl: 0, pnlPercent: 0 };
+      }
+      const { totalValueTwd, pnl: unrealizedPnl, pnlPercent } = calcHoldingPnl({
+        quantity: h.quantity,
+        priceInNative: price,
+        costBasisInNative: h.costBasis ?? 0,
+        usdTwd,
+        needsFx,
+      });
 
       return {
         id: h.id,
@@ -121,13 +127,13 @@ export default function CategoryDetailPage({
   }, [categoryHoldings, getChange, needsFx, usdTwd]);
 
   const { totalPnl, totalCostTwd } = useMemo(() => {
-    const fxMultiplier = needsFx ? usdTwd : 1;
     let pnl = 0;
     let cost = 0;
     for (const row of holdingRows) {
       if (row.costBasis == null || row.currentPrice == null) continue;
       pnl += row.unrealizedPnl;
-      cost += row.costBasis * fxMultiplier;
+      const { costTwd } = calcHoldingPnl({ quantity: row.quantity, priceInNative: row.currentPrice, costBasisInNative: row.costBasis, usdTwd, needsFx });
+      cost += costTwd;
     }
     return { totalPnl: pnl, totalCostTwd: cost };
   }, [holdingRows, needsFx, usdTwd]);

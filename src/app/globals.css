@@ -73,6 +73,7 @@
   --chart-4: #f44336;
   --chart-5: #7e706a;
   --radius: 0.75rem;
+  --shadow-warm-tooltip: 0 8px 24px -8px rgba(61, 43, 47, 0.18);
   --sidebar: #3d2b2f;
   --sidebar-foreground: #e5e0dc;
   --sidebar-primary: #e8b462;
