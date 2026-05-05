@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.3] - 2026-05-05
+
+### Fixed
+- **Insights page**: Remaining hardcoded gain/loss hex colors (`#f44336`, `#7bb155`) replaced with CSS tokens (`--color-gain`, `--color-loss`) in holdings table PnL column, debt remaining balance value, StatCard value, PnL legend, and allocation drift badges.
+- **Insights page**: `paidPct` debt progress bar now clamped with `Math.max(0, ...)` in addition to `Math.min(100, ...)` to handle edge-case negative-balance loans.
+- **Insights page**: Recharts tooltip payload map callbacks now guard against non-numeric values with a `typeof p.value !== 'number'` check, preventing a potential render crash on malformed chart data.
+- **Settings page**: Fixed mismatched `<h2>`/`</h3>` JSX tags introduced in the pre-landing review — all three section headings now use `<h2>` consistently.
+
+### Refactored
+- **Insights page**: Extracted `TooltipCard` wrapper component shared by `PnlTooltip` and `HistoryTooltip`, eliminating duplicate container JSX.
+
 ## [0.2.2] - 2026-05-04
 
 ### Changed
