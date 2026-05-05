@@ -96,8 +96,8 @@ function StatCard({
   const valueColor = neutral
     ? "text-gray-900"
     : positive
-    ? "text-[#f44336]"
-    : "text-[#7bb155]";
+    ? "text-[color:var(--color-gain)]"
+    : "text-[color:var(--color-loss)]";
   return (
     <div className="card-premium rounded-xl p-5">
       <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
@@ -121,17 +121,20 @@ function PnlTooltip({
   if (!active || !payload?.length) return null;
   return (
     <TooltipCard label={label}>
-      {payload.map((p, i) => (
-        <p
-          key={i}
-          className={`text-sm font-bold tabular-nums ${
-            p.value >= 0 ? "text-[color:var(--color-gain)]" : "text-[color:var(--color-loss)]"
-          }`}
-        >
-          {p.value >= 0 ? "+" : ""}
-          {formatTWD(p.value)}
-        </p>
-      ))}
+      {payload.map((p, i) => {
+        if (typeof p.value !== "number") return null;
+        return (
+          <p
+            key={i}
+            className={`text-sm font-bold tabular-nums ${
+              p.value >= 0 ? "text-[color:var(--color-gain)]" : "text-[color:var(--color-loss)]"
+            }`}
+          >
+            {p.value >= 0 ? "+" : ""}
+            {formatTWD(p.value)}
+          </p>
+        );
+      })}
     </TooltipCard>
   );
 }
@@ -148,20 +151,23 @@ function HistoryTooltip({
   if (!active || !payload?.length) return null;
   return (
     <TooltipCard label={label} spacing="space-y-1.5">
-      {payload.map((p, i) => (
-        <div key={i} className="flex items-center gap-4">
-          <span className="inline-flex items-center gap-2 text-xs text-[color:var(--muted-foreground)]">
-            <span
-              className="h-2 w-2 rounded-full shrink-0"
-              style={{ backgroundColor: p.color }}
-            />
-            {p.name}
-          </span>
-          <span className="ml-auto text-sm font-bold text-[color:var(--foreground)] tabular-nums">
-            {formatCompactNumber(p.value)}
-          </span>
-        </div>
-      ))}
+      {payload.map((p, i) => {
+        if (typeof p.value !== "number") return null;
+        return (
+          <div key={i} className="flex items-center gap-4">
+            <span className="inline-flex items-center gap-2 text-xs text-[color:var(--muted-foreground)]">
+              <span
+                className="h-2 w-2 rounded-full shrink-0"
+                style={{ backgroundColor: p.color }}
+              />
+              {p.name}
+            </span>
+            <span className="ml-auto text-sm font-bold text-[color:var(--foreground)] tabular-nums">
+              {formatCompactNumber(p.value)}
+            </span>
+          </div>
+        );
+      })}
     </TooltipCard>
   );
 }
@@ -561,7 +567,7 @@ export default function InsightsPage() {
                 </div>
                 <span
                   className={`text-xs font-semibold tabular-nums ${
-                    cat.pnl >= 0 ? "text-[#f44336]" : "text-[#7bb155]"
+                    cat.pnl >= 0 ? "text-[color:var(--color-gain)]" : "text-[color:var(--color-loss)]"
                   }`}
                 >
                   {cat.pnl >= 0 ? "+" : ""}
@@ -702,8 +708,8 @@ export default function InsightsPage() {
                           Math.abs(row.drift ?? 0) < 2
                             ? "text-gray-400 bg-gray-100"
                             : (row.drift ?? 0) > 0
-                            ? "text-[#f44336] bg-[#f44336]/10"
-                            : "text-[#7bb155] bg-[#7bb155]/10"
+                            ? "text-[color:var(--color-gain)] bg-[color:var(--color-gain)]/10"
+                            : "text-[color:var(--color-loss)] bg-[color:var(--color-loss)]/10"
                         }`}
                       >
                         {(row.drift ?? 0) >= 0 ? "+" : ""}
@@ -806,7 +812,7 @@ export default function InsightsPage() {
                         </p>
                         <p
                           className={`text-[11px] tabular-nums ${
-                            h.pnl >= 0 ? "text-[#f44336]" : "text-[#7bb155]"
+                            h.pnl >= 0 ? "text-[color:var(--color-gain)]" : "text-[color:var(--color-loss)]"
                           }`}
                         >
                           {h.pnl >= 0 ? "+" : ""}
@@ -817,7 +823,7 @@ export default function InsightsPage() {
                       <>
                         <p
                           className={`text-sm font-semibold tabular-nums ${
-                            h.pnlPct >= 0 ? "text-[#f44336]" : "text-[#7bb155]"
+                            h.pnlPct >= 0 ? "text-[color:var(--color-gain)]" : "text-[color:var(--color-loss)]"
                           }`}
                         >
                           {h.pnlPct >= 0 ? "+" : ""}
@@ -843,7 +849,7 @@ export default function InsightsPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
             <div>
               <p className="text-xs text-gray-400 mb-1">剩餘總負債</p>
-              <p className="text-lg font-bold text-[#f44336] tabular-nums">
+              <p className="text-lg font-bold text-[color:var(--color-gain)] tabular-nums">
                 {formatTWD(debtSummary.totalRemaining)}
               </p>
             </div>
@@ -883,7 +889,7 @@ export default function InsightsPage() {
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{
-                        width: `${Math.min(paidPct, 100)}%`,
+                        width: `${Math.max(0, Math.min(paidPct, 100))}%`,
                         background: "linear-gradient(90deg, #cd7b65, #e8b462)",
                       }}
                     />
