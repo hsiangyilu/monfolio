@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { fetchUsStockPrices } from "@/lib/api/us-stocks";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const holdings = await prisma.holding.findMany({
