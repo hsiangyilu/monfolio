@@ -118,3 +118,14 @@ When the user's request matches an available skill, ALWAYS invoke it using the S
 - Architecture review → `plan-eng-review`
 - Save progress / checkpoint → `context-save`
 - Code quality / health → `health`
+
+### gstack
+
+Available gstack commands:
+/office-hours, /plan-ceo-review, /plan-eng-review, /plan-design-review, /autoplan,
+/design-consultation, /design-shotgun, /design-html,
+/review, /investigate, /codex,
+/browse, /qa, /qa-only, /qa-design-review, /benchmark, /cso,
+/ship, /land-and-deploy, /canary, /document-release,
+/retro, /learn,
+/careful, /freeze, /guard, /unfreeze, /checkpoint, /gstack-upgrade
